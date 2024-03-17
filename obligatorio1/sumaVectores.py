@@ -10,7 +10,7 @@ def vecSum(vect1, vect2, dim):
     v2 = np.array(vect2)
 
     # Sumamos si sus dim son iguales
-    if(v1.shape == v2.shape):  
+    if(v1.shape == v2.shape):
         for i in range(dim):
             vect3.append(vect1[i]+vect2[i])
 
