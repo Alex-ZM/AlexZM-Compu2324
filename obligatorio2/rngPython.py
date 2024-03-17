@@ -12,7 +12,7 @@ def rngPython(nSamples, min, max):  # Generar e introducir 10 números aleatorio
 
 def checkRandomness(min, max):  # Mostrar un histograma con los datos del fichero .npy
     lectura = np.load("randomNumbersTest.npy")
-    plt.hist(lectura, max-min)
+    plt.hist(lectura, max-min+1)
     plt.show()
 
 
