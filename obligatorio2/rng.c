@@ -24,9 +24,9 @@ int rng(int seed, int fSize)
 	int i = 0;
 	for(int j=0; j<fSize; j++)
 	{
-		gsl_rng_set(tau, seed+i);  // Genera el número aleatorio
+		gsl_rng_set(tau, seed+j);  // Genera el número aleatorio
 		fprintf(rngFile, "%f/n", gsl_rng_uniform(tau));  // Introduce el número aleatorio en el fichero
-		i = gsl_rng_uniform(tau);  // Cambiamos la semilla que generará el siguiente número
+		// i = gsl_rng_uniform(tau);  // Cambiamos la semilla que generará el siguiente número
 	}
 }
 
