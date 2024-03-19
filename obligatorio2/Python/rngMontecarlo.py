@@ -3,7 +3,7 @@ import numpy as np
 
 
 def rngVectorParejas(N):  # Genera un vector de N parejas de números aleatorios entre 0 y N
-    vectorParejas = np.random.randint(0, N, (N*N, 2))
+    vectorParejas = np.random.randint(N, size=(N, N))
     print(vectorParejas)  # ---- TEMPORAL, BORRAR ESTA LÍNEA MÁS TARDE ----
     return vectorParejas
 
