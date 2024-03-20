@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import time
 
 
 def rngVectorParejas(N):  # Genera un vector de N parejas de números aleatorios entre 0 y N
