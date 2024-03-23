@@ -49,3 +49,11 @@ def evA(i):  # Evolución temporal de la aceleración del planeta i
     return aFinal
 
 
+def evV(i):  # Evolución temporal de la velocidad del planeta i
+    return w(i) + (h/2)*evA(i)
+
+
+# Ahora solo queda programar el bucle y guardar los resultados de cada iteración en el
+# formato correcto y dentro de un fichero, para poder representarlos luego.
+
+
