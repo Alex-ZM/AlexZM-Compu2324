@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "structmember.h": "c",
+        "compile.h": "c"
+    }
+}
