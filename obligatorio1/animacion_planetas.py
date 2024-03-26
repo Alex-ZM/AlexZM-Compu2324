@@ -47,7 +47,7 @@ import numpy as np
 
 # Parámetros
 # ========================================
-file_in = "planets_data.dat" # Nombre del fichero de datos
+file_in = "planetsT_data.dat" # Nombre del fichero de datos
 file_out = "planetas" # Nombre del fichero de salida (sin extensión)
 
 # Límites de los ejes X e Y
@@ -66,7 +66,7 @@ dpi = 150 # Calidad del vídeo de salida (dots per inch)
 # Radio del planeta, en las mismas unidades que la posición
 # Puede ser un número (el radio de todos los planetas) o una lista con
 # el radio de cada uno
-planet_radius = [0.15, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05] 
+planet_radius = [0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05] 
 #planet_radius = [0.5, 0.7, 1.1]
 
 
@@ -87,7 +87,7 @@ for frame_data_str in data_str.split("\n\n"):
     frame_data = list()
 
     # Itera sobre las líneas del bloque
-    # (cada línea da la posición de un planta)
+    # (cada línea da la posición de un planeta)
     for planet_pos_str in frame_data_str.split("\n"):
         # Lee la componente x e y de la línea
         planet_pos = np.fromstring(planet_pos_str, sep=",")

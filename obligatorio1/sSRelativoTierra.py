@@ -15,7 +15,7 @@ class Plnt:  # Clase con las propiedades de cada planeta
 masaSolar = 1.98855*10**30  # Masa del Sol
 UA = 1.496*10**11  # Distancia Tierra-Sol
 G = 6.67*10**(-11)  # Cte de Gravitación Universal
-h = 0.001  # <--- Variar este parámetro para cambiar la precisión
+h = 0.0003 # <--- Variar este parámetro para cambiar la precisión
 
 
 def reescalarV(v):  # Función para reescalar t

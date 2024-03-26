@@ -89,7 +89,7 @@ for j in range(nIter):
     t = t + h                  #
 
 # Por último, escribimos algunos datos de interés al final del fichero
-ficheroPosiciones.write("# Se ha usado h = "+str(h)+"\n")
+ficheroPosiciones.write("# Se han realizado "+nIter+" iteraciones con h = "+str(h)+"\n")
 ficheroPosiciones.write("# T("+str(1)+") = "+str(planeta[1].T/planeta[3].T*365.256)+" días terrestres (vs. 87.969)\n")
 ficheroPosiciones.write("# T("+str(2)+") = "+str(planeta[2].T/planeta[3].T*365.256)+" días terrestres (vs. 224.699)\n")
 ficheroPosiciones.write("# T("+str(3)+") = "+str(planeta[3].T/planeta[3].T*365.256)+" días terrestres (vs. 365.256)\n")
