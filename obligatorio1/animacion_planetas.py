@@ -47,7 +47,7 @@ import numpy as np
 
 # Parámetros
 # ========================================
-file_in = "planetsT_data.dat" # Nombre del fichero de datos
+file_in = "planets_data.dat" # Nombre del fichero de datos
 file_out = "planetas" # Nombre del fichero de salida (sin extensión)
 
 # Límites de los ejes X e Y
@@ -56,12 +56,12 @@ x_max =  9
 y_min = -9
 y_max =  9
 
-interval = 1 # Tiempo entre fotogramas en milisegundos
+interval = 50 # Tiempo entre fotogramas en milisegundos
 show_trail = True # Muestra la "estela" del planeta
 trail_width = 1 # Ancho de la estela
 save_to_file = False # False: muestra la animación por pantalla,
-                     # True: la guarda en un fichero
-dpi = 150 # Calidad del vídeo de salida (dots per inch)
+                    # True: la guarda en un fichero
+dpi = 75 # Calidad del vídeo de salida (dots per inch)
 
 # Radio del planeta, en las mismas unidades que la posición
 # Puede ser un número (el radio de todos los planetas) o una lista con

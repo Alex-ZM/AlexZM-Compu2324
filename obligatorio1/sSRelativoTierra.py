@@ -12,14 +12,14 @@ class Plnt:  # Clase con las propiedades de cada planeta
 
 
 # Definimos algunas constantes (Sistema Internacional - reescalado)
-masaSolar = 1.98855*10**30  # Masa del Sol
-UA = 1.496*10**11  # Distancia Tierra-Sol
+masaSolar = 1.98855*10**30  # Masa del Sol (kg)
+UA = 1.496*10**11   # Distancia Tierra-Sol (m)
 G = 6.67*10**(-11)  # Cte de Gravitación Universal
-h = 0.0003 # <--- Variar este parámetro para cambiar la precisión
+h = 0.0003          # <--- Paso temporal (inverso a la precisión)
+nIter = 200000      # <--- Número de iteraciones
 
-
-def reescalarV(v):  # Función para reescalar t
-    return v*np.sqrt(UA/(G*masaSolar))   # 
+def reescalarV(v):  # Función para reescalar la velocidad
+    return v*np.sqrt(UA/(G*masaSolar))
 
 
 # Definimos (y reescalamos) los parámetros iniciales de los planetas
@@ -69,7 +69,7 @@ def evV(i):  # Evolución temporal de la velocidad del planeta i
 # Ahora solo queda programar el bucle y guardar los resultados de cada iteración en el
 # formato correcto y dentro de un fichero, para poder representarlos luego.
 ficheroPosiciones = open("planetsT_data.dat", "w")
-for j in range(20000):
+for j in range(nIter):
     for i in range(len(planeta)):
         ficheroPosiciones.write(str(np.subtract(planeta[i].r[0],planeta[3].r[0])) + ", " + str(np.subtract(planeta[i].r[1],planeta[3].r[1])) + "\n")  # Calcula entroduce las posiciones de los planetas en el fichero
     ficheroPosiciones.write("\n")  # Para separar los grupos de datos por instante temporal
@@ -77,5 +77,9 @@ for j in range(20000):
         planeta[i].r = evR(i)  #
         planeta[i].a = evA(i)  # Avance temporal: t = t+h
         planeta[i].v = evV(i)  #
+
+# Por último, escribimos algunos datos de interés al final del fichero
+ficheroPosiciones.write("# Se han realizado "+nIter+" iteraciones con h = "+str(h)+"\n")    
+
 ficheroPosiciones.close()
 

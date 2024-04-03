@@ -16,8 +16,10 @@ class Plnt:  # Clase con las propiedades de cada planeta
 masaSolar = 1.98855*10**30  # Masa del Sol
 UA = 1.496*10**11  # Distancia Tierra-Sol
 G = 6.67*10**(-11)  # Cte de Gravitación Universal
-h = 0.0003      # <---------- Paso temporal, inverso a la precisión (CAMBIAR)
-nIter = 350000  # <---------- Número de iteraciones (CAMBIAR)
+h = 0.0005          # <---------- Paso temporal, inverso a la precisión (CAMBIAR)
+nIter = 20000       # <---------- Número de iteraciones (CAMBIAR)
+skip = 50           # <---------- Cada cuántas iteraciones guarda datos en los ficheros (CAMBIAR)
+guardarVelocidades = True  # <--- Elije si guardar también las velocidades (CAMBIAR)
 t = 0
 
 
@@ -72,24 +74,31 @@ def evV(i):  # Evolución temporal de la velocidad del planeta i
 # Ahora solo queda programar el bucle y guardar los resultados de cada iteración en el
 # formato correcto y dentro de un fichero, para poder representarlos luego.
 ficheroPosiciones = open("planets_data.dat", "w")
+ficheroVelocidades = open("velocidades.dat", "w")
 for j in range(nIter):
 
-    for i in range(len(planeta)):
+    if j%skip==0:  # Guardamos la posición de los planetas cada "skip" iteraciones
+        for i in range(len(planeta)):
 
+            ficheroPosiciones.write(str(planeta[i].r[0]) + ", " + str(planeta[i].r[1]) + "\n")  # Calcula e introduce las posiciones de los planetas en el fichero
+        ficheroPosiciones.write("\n")  # Para separar los grupos de datos por instante temporal
+
+        if guardarVelocidades:  # Si lo elegimos, guardamos las velocidades en un fichero
+            for i in range(len(planeta)):
+                ficheroVelocidades.write(str(planeta[i].v[0]) + ", " + str(planeta[i].v[1]) + "\n")  # Calcula e introduce las velocidades de los planetas en el fichero
+            ficheroVelocidades.write("\n")  # Para separar los grupos de datos por instante temporal
+
+    for i in range(len(planeta)):
         if planeta[i].T==0 and planeta[i].r[1]<0:
             planeta[i].T = 2*t  # Guarda el período de cada planeta
 
-        ficheroPosiciones.write(str(planeta[i].r[0]) + ", " + str(planeta[i].r[1]) + "\n")  # Calcula entroduce las posiciones de los planetas en el fichero
-    ficheroPosiciones.write("\n")  # Para separar los grupos de datos por instante temporal
-
-    for i in range(len(planeta)):
         planeta[i].r = evR(i)  #
         planeta[i].a = evA(i)  # Avance temporal: t = t+h
         planeta[i].v = evV(i)  #
     t = t + h                  #
 
 # Por último, escribimos algunos datos de interés al final del fichero
-ficheroPosiciones.write("# Se han realizado "+nIter+" iteraciones con h = "+str(h)+"\n")
+ficheroPosiciones.write("# Se han realizado "+str(nIter)+" iteraciones con h = "+str(h)+"\n")
 ficheroPosiciones.write("# T("+str(1)+") = "+str(planeta[1].T/planeta[3].T*365.256)+" días terrestres (vs. 87.969)\n")
 ficheroPosiciones.write("# T("+str(2)+") = "+str(planeta[2].T/planeta[3].T*365.256)+" días terrestres (vs. 224.699)\n")
 ficheroPosiciones.write("# T("+str(3)+") = "+str(planeta[3].T/planeta[3].T*365.256)+" días terrestres (vs. 365.256)\n")
@@ -98,3 +107,4 @@ ficheroPosiciones.write("# T("+str(5)+") = "+str(planeta[5].T/planeta[3].T*365.2
 ficheroPosiciones.write("# T("+str(6)+") = "+str(planeta[6].T/planeta[3].T*365.256)+" días terrestres (vs. 10759.23)\n")
 
 ficheroPosiciones.close()
+ficheroVelocidades.close()
