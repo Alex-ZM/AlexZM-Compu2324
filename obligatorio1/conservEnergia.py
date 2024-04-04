@@ -3,11 +3,9 @@ import numpy as np
 
 
 class Plnt:  # Clase con las propiedades de cada planeta
-    def __init__(self, make, m, r, v):
+    def __init__(self, make, m):
         self.make = make
         self.m = m
-        self.r = r
-        self.v = v
 
 
 G = 6.67*10**(-11)  # Constante de Gravitación Universal
@@ -19,33 +17,62 @@ def reescalarV(v):  # Función para reescalar t
     return v*np.sqrt(UA/(G*masaSolar))
 
 
-sol =      Plnt(0, m=1,                       r=np.array([0,10**-15]),               v=np.array([0,0])                 )  
-mercurio = Plnt(1, m=330.2*10**21/masaSolar,  r=np.array([57.9*10**9/UA,10**-15]),   v=np.array([0,reescalarV(47890)]) ) 
-venus =    Plnt(2, m=4868.5*10**21/masaSolar, r=np.array([108.2*10**9/UA,10**-15]),  v=np.array([0,reescalarV(35030)]) ) 
-tierra =   Plnt(3, m=5973.6*10**21/masaSolar, r=np.array([1,10**-15]),               v=np.array([0,reescalarV(29790)]) ) 
-marte =    Plnt(4, m=641.85*10**21/masaSolar, r=np.array([227.9*10**9/UA,10**-15]),  v=np.array([0,reescalarV(24130)]) ) 
-jupiter =  Plnt(5, m=1.899*10**27/masaSolar,  r=np.array([778.6*10**9/UA,10**-15]),  v=np.array([0,reescalarV(13100)]) ) 
-saturno =  Plnt(6, m=0.568*10**27/masaSolar,  r=np.array([1433.5*10**9/UA,10**-15]), v=np.array([0,reescalarV(9700)])  )
-urano =    Plnt(7, m=0.087*10**27/masaSolar,  r=np.array([2872.5*10**9/UA,10**-15]), v=np.array([0,reescalarV(6800)])  )
-neptuno =  Plnt(8, m=0.102*10**27/masaSolar,  r=np.array([4495.1*10**9/UA,10**-15]), v=np.array([0,reescalarV(5400)])  )
-pluton =   Plnt(9, m=12.5*10**21/masaSolar,   r=np.array([5870*10**9/UA,10**-15]),   v=np.array([0,reescalarV(4700)])  )
+sol =      Plnt(0, masaSolar      )  
+mercurio = Plnt(1, m=330.2*10**21 ) 
+venus =    Plnt(2, m=4868.5*10**21) 
+tierra =   Plnt(3, m=5973.6*10**21) 
+marte =    Plnt(4, m=641.85*10**21) 
+jupiter =  Plnt(5, m=1.899*10**27 ) 
+saturno =  Plnt(6, m=0.568*10**27 )
+urano =    Plnt(7, m=0.087*10**27 )
+neptuno =  Plnt(8, m=0.102*10**27 )
+pluton =   Plnt(9, m=12.5*10**21  )
 
-planeta = [sol, mercurio, venus, tierra, marte, jupiter, saturno]
+planeta = [sol, mercurio, venus, tierra, marte, jupiter]
+T = []
+V = []
 
 
-def T(m, v):
+def eCinetica(m, v):
     return 0.5*m*v**2
 
 
-def V(m1, m2, r):
+def ePotencial(m1, m2, r):
     return -G*m1*m2/r
 
 
-ficheroPosiciones = open("planets_data.dat", "r")
-ficheroVelocidades = open("velocidades.dat", "r")
+pos = np.loadtxt("posiciones.dat")
+vel = np.loadtxt("velocidades.dat")
+nDatos = len(pos)
 
-for i in ficheroPosiciones:
-    n = i%len(planeta)  # Para elegir el planeta correcto
+for i in range(nDatos):
+    pos[i] = pos[i]*UA
+    vel[i] = vel[i]/np.sqrt(UA/(G*masaSolar))
 
-ficheroPosiciones.close()
-ficheroVelocidades.close()
+for t in range(0,nDatos,len(planeta)):  # itera por el número de datos de los ficheros
+    for p in range(len(planeta)):
+        T.append(eCinetica(planeta[p].m, np.linalg.norm(vel[t+p])))
+        ePot = 0
+        for i in range(len([planeta])):
+            if i!=p:
+                ePot += ePotencial(planeta[p].m, planeta[i].m, np.linalg.norm(pos[t+p]))
+        V.append(ePot)
+
+tMercurio = []
+vMercurio = []
+E = []
+for i in range(4, nDatos, len(planeta)):
+    tMercurio.append(T[i])
+    vMercurio.append(V[i])
+
+print(vMercurio)
+print(tMercurio)
+print()
+
+for i in range(len(tMercurio)):
+    E.append(tMercurio[i]+vMercurio[i])
+
+plt.plot(tMercurio)
+plt.plot(vMercurio)
+plt.plot(E)
+plt.show()
