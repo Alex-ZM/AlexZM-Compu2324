@@ -16,8 +16,8 @@ class Plnt:  # Clase con las propiedades de cada planeta
 masaSolar = 1.98855*10**30  # Masa del Sol
 UA = 1.496*10**11  # Distancia Tierra-Sol
 G = 6.67*10**(-11)  # Cte de Gravitación Universal
-h = 0.0001          # <---------- Paso temporal, inverso a la precisión (CAMBIAR)
-nIter = 1000000     # <---------- Número de iteraciones (CAMBIAR)
+h = 0.000005          # <---------- Paso temporal, inverso a la precisión (CAMBIAR)
+nIter = 20000000     # <---------- Número de iteraciones (CAMBIAR)
 skip = 500          # <---------- Cada cuántas iteraciones guarda datos en los ficheros (CAMBIAR)
 guardarVelocidades = True  # <--- Elije si guardar también las velocidades (CAMBIAR)
 t = 0
