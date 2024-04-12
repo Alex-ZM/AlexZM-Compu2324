@@ -1,6 +1,5 @@
 # Simulación del sistema solar
 import numpy as np
-from numba import jit
 import time
 
 
@@ -9,7 +8,7 @@ masaSolar = 1.98855*10**30  # Masa del Sol
 UA = 1.496*10**11  # Distancia Tierra-Sol
 G = 6.67*10**(-11)  # Cte de Gravitación Universal
 h = 0.0001          # <---------- Paso temporal, inverso a la precisión (CAMBIAR)
-nIter = 20000     # <---------- Número de iteraciones (CAMBIAR)
+nIter = 10000     # <---------- Número de iteraciones (CAMBIAR)
 skip = 50          # <---------- Cada cuántas iteraciones guarda datos en los ficheros (CAMBIAR)
 guardarVelocidades = False  # <--- Elije si guardar también las velocidades (CAMBIAR)
 t = 0
@@ -17,7 +16,6 @@ nPlanetas = 4
 tEjecIni = time.time()
 
 
-@jit(nopython=True)
 def reescalarV(v):  # Función para reescalar t
     return v*np.sqrt(UA/(G*masaSolar))
 
@@ -72,7 +70,6 @@ T = np.array(
     [1]])
 
 
-@jit(nopython=True)
 def a(i):  # Valor de la aceleración del planeta i en el instante actual
     aFinal = np.array([0.0,0.0])
     for j in range(0, nPlanetas):
@@ -82,17 +79,14 @@ def a(i):  # Valor de la aceleración del planeta i en el instante actual
     return aFinal
 
 
-@jit(nopython=True)
 def w(i):  #Valor de w del planeta i
     return (v[i] + (h/2)*a(i))
 
 
-@jit(nopython=True)
 def evR(i):  # Evolución temporal de la posición del planeta i
     return (r[i] + h*w(i))
 
 
-@jit(nopython=True)
 def evA(i):  # Evolución temporal de la aceleración del planeta i
     aFinal = np.array([0.0,0.0])
     for j in range(0,nPlanetas):
@@ -102,7 +96,6 @@ def evA(i):  # Evolución temporal de la aceleración del planeta i
     return aFinal
 
 
-@jit(nopython=True)
 def evV(i):  # Evolución temporal de la velocidad del planeta i
     return (w(i) + (h/2)*evA(i))
 
