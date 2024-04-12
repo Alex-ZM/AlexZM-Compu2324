@@ -127,16 +127,16 @@ for j in range(nIter):
     t = t + h          #
 
 # Por último, escribimos algunos datos de interés al final del fichero
-ficheroPlot.write("# Se han realizado "+str(nIter)+" iteraciones con h = "+str(h)+"\n")
-ficheroPlot.write("# T(1) = "+str(T[1]/T[3]*365.256)+" días terrestres (vs. 87.969)\n")
-ficheroPlot.write("# T(2) = "+str(T[2]/T[3]*365.256)+" días terrestres (vs. 224.699)\n")
-ficheroPlot.write("# T(3) = "+str(T[3]/T[3]*365.256)+" días terrestres (vs. 365.256)\n")
+ficheroPlot.write("# Se han realizado "+str(nIter)+" iteraciones con h = "+str(h)+" y skip "+str(skip)+"\n")
+#ficheroPlot.write("# T(1) = "+str(T[1]/T[3]*365.256)+" días terrestres (vs. 87.969)\n")
+#ficheroPlot.write("# T(2) = "+str(T[2]/T[3]*365.256)+" días terrestres (vs. 224.699)\n")
+#ficheroPlot.write("# T(3) = "+str(T[3]/T[3]*365.256)+" días terrestres (vs. 365.256)\n")
 #ficheroPlot.write("# T(4) = "+str(T[4]/T[3]*365.256)+" días terrestres (vs. 686.979)\n")
 #ficheroPlot.write("# T(5) = "+str(T[5]/T[3]*365.256)+" días terrestres (vs. 4332.589)\n")
 #ficheroPlot.write("# T(6) = "+str(T[6]/T[3]*365.256)+" días terrestres (vs. 10759.23)\n")
 
 tEjecFin = time.time()
-ficheroPlot.write("Tiempo de ejecución: "+str(tEjecFin-tEjecIni))
+ficheroPlot.write("# Tiempo de ejecución: "+str(tEjecFin-tEjecIni))
 
 ficheroPosiciones.close()
 ficheroVelocidades.close()
