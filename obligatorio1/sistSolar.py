@@ -12,7 +12,7 @@ nIter = 10000     # <---------- Número de iteraciones (CAMBIAR)
 skip = 50          # <---------- Cada cuántas iteraciones guarda datos en los ficheros (CAMBIAR)
 guardarVelocidades = False  # <--- Elije si guardar también las velocidades (CAMBIAR)
 t = 0
-nPlanetas = 4
+nPlanetas = 25
 tEjecIni = time.time()
 
 
@@ -31,6 +31,21 @@ m = np.array(
     [0.568*10**27/masaSolar],  
     [0.087*10**27/masaSolar],  
     [0.102*10**27/masaSolar], 
+    [12.5*10**21/masaSolar],
+    [12.5*10**21/masaSolar],
+    [12.5*10**21/masaSolar],
+    [12.5*10**21/masaSolar],
+    [12.5*10**21/masaSolar],
+    [12.5*10**21/masaSolar],
+    [12.5*10**21/masaSolar],
+    [12.5*10**21/masaSolar],
+    [12.5*10**21/masaSolar],
+    [12.5*10**21/masaSolar],
+    [12.5*10**21/masaSolar],
+    [12.5*10**21/masaSolar],
+    [12.5*10**21/masaSolar],
+    [12.5*10**21/masaSolar],
+    [12.5*10**21/masaSolar],
     [12.5*10**21/masaSolar]])  
 
 r = np.array(
@@ -43,7 +58,23 @@ r = np.array(
     [1433.5*10**9/UA,10**-15], 
     [2872.5*10**9/UA,10**-15], 
     [4495.1*10**9/UA,10**-15], 
-    [5870*10**9/UA,10**-15]])   
+    [5870*10**9/UA,10**-15],
+    [(5870*10**9+(5870-4491)*10**9)/UA,10**-15],
+    [(5870*10**9+2*(5870-4491)*10**9)/UA,10**-15],
+    [(5870*10**9+3*(5870-4491)*10**9)/UA,10**-15],
+    [(5870*10**9+4*(5870-4491)*10**9)/UA,10**-15],
+    [(5870*10**9+5*(5870-4491)*10**9)/UA,10**-15],
+    [(5870*10**9+6*(5870-4491)*10**9)/UA,10**-15],
+    [(5870*10**9+7*(5870-4491)*10**9)/UA,10**-15],
+    [(5870*10**9+8*(5870-4491)*10**9)/UA,10**-15],
+    [(5870*10**9+9*(5870-4491)*10**9)/UA,10**-15],
+    [(5870*10**9+10*(5870-4491)*10**9)/UA,10**-15],
+    [(5870*10**9+11*(5870-4491)*10**9)/UA,10**-15],
+    [(5870*10**9+12*(5870-4491)*10**9)/UA,10**-15],
+    [(5870*10**9+13*(5870-4491)*10**9)/UA,10**-15],
+    [(5870*10**9+14*(5870-4491)*10**9)/UA,10**-15],
+    [(5870*10**9+15*(5870-4491)*10**9)/UA,10**-15],
+    [(5870*10**9+16*(5870-4491)*10**9)/UA,10**-15]])   
 
 v = np.array(
     [[0,0],               
@@ -55,10 +86,40 @@ v = np.array(
     [0,reescalarV(9700)], 
     [0,reescalarV(6800)], 
     [0,reescalarV(5400)], 
+    [0,reescalarV(4700)],
+    [0,reescalarV(4700)],
+    [0,reescalarV(4700)],
+    [0,reescalarV(4700)],
+    [0,reescalarV(4700)],
+    [0,reescalarV(4700)],
+    [0,reescalarV(4700)],
+    [0,reescalarV(4700)],
+    [0,reescalarV(4700)],
+    [0,reescalarV(4700)],
+    [0,reescalarV(4700)],
+    [0,reescalarV(4700)],
+    [0,reescalarV(4700)],
+    [0,reescalarV(4700)],
+    [0,reescalarV(4700)],
     [0,reescalarV(4700)]])
 
 T = np.array(
     [[1],
+    [1],
+    [1],
+    [1],
+    [1],
+    [1],
+    [1],
+    [1],
+    [1],
+    [1],
+    [1],
+    [1],
+    [1],
+    [1],
+    [1],
+    [1],
     [1],
     [1],
     [1],
@@ -103,8 +164,9 @@ def evV(i):  # Evolución temporal de la velocidad del planeta i
 # Ahora solo queda programar el bucle y guardar los resultados de cada iteración en el
 # formato correcto y dentro de un fichero, para poder representarlos luego.
 ficheroPlot = open("planets_data.dat", "w")
-ficheroPosiciones = open("posiciones.dat", "w")
-ficheroVelocidades = open("velocidades.dat", "w")
+if guardarVelocidades:
+    ficheroPosiciones = open("posiciones.dat", "w")
+    ficheroVelocidades = open("velocidades.dat", "w")
 for j in range(nIter):
 
     if j%skip==0:  # Guardamos la posición de los planetas cada "skip" iteraciones
@@ -138,5 +200,6 @@ ficheroPlot.write("# Se han realizado "+str(nIter)+" iteraciones con h = "+str(h
 tEjecFin = time.time()
 ficheroPlot.write("# Tiempo de ejecución: "+str(tEjecFin-tEjecIni))
 
-ficheroPosiciones.close()
-ficheroVelocidades.close()
+if guardarVelocidades:
+    ficheroPosiciones.close()
+    ficheroVelocidades.close()
