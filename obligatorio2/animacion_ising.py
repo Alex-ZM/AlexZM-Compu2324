@@ -44,10 +44,13 @@ from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 import numpy as np
 import io
+import os
 
 # Parámetros
 # ========================================
-file_in = "ising_data.dat" # Nombre del fichero de datos
+wd = os.path.dirname(__file__)      # Directorio de trabajo
+rd = "ising_data.dat"               # Directorio relativo
+file_in = os.path.join(wd,rd) # Nombre del fichero de datos
 file_out = "ising" # Nombre del fichero de salida (sin extensión)
 interval = 1 # Tiempo entre fotogramas en milisegundos
 save_to_file = False # False: muestra la animación por pantalla,

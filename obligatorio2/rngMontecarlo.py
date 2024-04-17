@@ -1,17 +1,19 @@
 import random
 import numpy as np
+import os
 
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
-N = 30    # Dimensión de la cuadrícula
-T = 1.0    # Temperatura T = [0,5]
-t = 1000  # Tiempo
+N = 15    # Dimensión de la cuadrícula
+T = 0.01    # Temperatura T = [0,5]
+t = 5000  # Tiempo
 
 # CREACIÓN DE LA MATRIZ DE ESPINES s
 s = np.random.choice([-1,+1], size=(N,N))
-print(s)
 
-fichero = open("ising_data.dat", "w")
+wd = os.path.dirname(__file__)  # Directorio de trabajo
+rd = "ising_data.dat"           # Directorio relativo
+fichero = open(os.path.join(wd,rd), "w")  
 
 for _ in range(0,t):
 
@@ -40,10 +42,12 @@ for _ in range(0,t):
 
     deltaE = 2*s[i,j]*(s[up,j]+s[down,j]+s[i,left]+s[i,right])
 
-    if 1<np.exp(-deltaE/T):     # 
-        p = np.exp(-deltaE/T)   # Evaluación de p
-    else:                       # 
-        p = 1                   # 
+    pE = np.exp(-deltaE/T)
+
+    if 1<pE:     # 
+        p = 1   # Evaluación de p
+    else:        # 
+        p = pE    # 
 
     n = random.random()  # Número aleatorio entre 0 y 1
 
@@ -51,9 +55,9 @@ for _ in range(0,t):
         s[i,j] = -s[i,j]    # 
     
     # Se guarda el estado de la red en este instante
-    for _ in range(0,N):
-        for i in range(0,N):
-            fichero.write(' '.join(map(str, s[i])) + "\n")
-        fichero.write("\n")
+    fichero.write("\n")
+    for i in range(0,N):
+        fichero.write(' '.join(map(str, s[i])) + "\n")
+        
 
 fichero.close()
