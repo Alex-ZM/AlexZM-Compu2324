@@ -1,12 +1,13 @@
 import random
 import numpy as np
 import os
+import time
 
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
-N = 15    # Dimensión de la cuadrícula
-T = 0.01    # Temperatura T = [0,5]
-t = 5000  # Tiempo
+N = 20    # Dimensión de la cuadrícula
+T = 1    # Temperatura T = [0,5]
+t = 10000  # Tiempo
 
 # CREACIÓN DE LA MATRIZ DE ESPINES s
 s = np.random.choice([-1,+1], size=(N,N))
@@ -15,6 +16,7 @@ wd = os.path.dirname(__file__)  # Directorio de trabajo
 rd = "ising_data.dat"           # Directorio relativo
 fichero = open(os.path.join(wd,rd), "w")  
 
+ini = time.time()
 for _ in range(0,t):
 
     i = random.randint(0,N-1)  # Se elije una partícula aleatoria
@@ -59,5 +61,8 @@ for _ in range(0,t):
     for i in range(0,N):
         fichero.write(' '.join(map(str, s[i])) + "\n")
         
+fin = time.time()
+print("|| N = "+str(N)+"\n|| T = "+str(T)+" K\n|| "+str(t)+" iteraciones")
+print("|| Tiempo de ejecución: "+f"{fin-ini:.3f}"+" s")
 
 fichero.close()
