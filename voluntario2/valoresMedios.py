@@ -5,18 +5,20 @@ import time
 
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
-N = 16    # Dimensión de la cuadrícula
+N = 5    # Dimensión de la cuadrícula
 T = 2    # Temperatura T = [0,5]
 t = 10**6*N**2  # Tiempo
 
-magnProm = np.array([])
-E = np.array([])
+magnProm = []  # Magnetización promedio de cada macroestado
+E = []  # Energía de cada macroestado
+ECuad = []
+#P = np.array([])  # Probabilidad de cada macroestado
 
 # CREACIÓN DE LA MATRIZ DE ESPINES s
 s = np.random.choice([-1,+1], size=(N,N)) 
 
 ini = time.time()
-for _ in range(0,t):
+for v in range(1,t):
 
     i = random.randint(0,N-1)  # Se elije una partícula aleatoria
     j = random.randint(0,N-1)  #
@@ -56,11 +58,11 @@ for _ in range(0,t):
         s[i,j] = -s[i,j]    # 
     
 
-    if t%(N*N*100)==0:  # Cada 100pmc calcula promedios:
+    if (100*N**2)%v==0:  # Cada 100pmc calcula promedios:
 
         magnProm.append(np.sum(s)/N**2)
 
-        Ei = 0
+        E_i = 0
         for i in range(0,N):
             for j in range(0,N):
                     if i==N-1:      #
@@ -83,12 +85,23 @@ for _ in range(0,t):
                         left = j-1   # 
                         right = j+1  # 
 
-                    Ei = Ei-0.5*(s[i,j]+(s[up,j]+s[down,j]+s[i,left]+s[i,right]))
-        E.append(Ei)
+                    E_i = E_i-0.5*(s[i,j]+(s[up,j]+s[down,j]+s[i,left]+s[i,right]))
+        E.append(E_i)
 
-        
-        
+        #P.append(np.exp(E_i/T))
+
+
+#Z = np.sum(P)
+#for i in range(len(E_i)):
+    #magnPromTotal = P[i]*magnProm[i]/Z
+
+for i in range(len(E)):
+    ECuad.append(E[i]**2)
+
+print("|| Magnetización promedio total: " + str(np.mean(magnProm)))
+print("\n|| La energía media es: " + str(np.mean(E)/(2*N)))
+print("\n|| El calor específico es: " + str((np.mean(ECuad)-np.mean(E)**2)/(T*N**2)))
         
 fin = time.time()
-print("|| N = "+str(N)+"\n|| T = "+str(T)+" s\n|| "+str(t)+" iteraciones")
+print("\n|| Red "+str(N)+"x"+str(N)+"\n|| T = "+str(T)+" K\n|| "+str(t)+" iteraciones")
 print("Tiempo de ejecución: "+str(fin-ini))
