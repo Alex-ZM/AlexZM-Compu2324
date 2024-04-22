@@ -1,0 +1,25 @@
+
+|| Magnetización promedio total: -0.002124787521247875
+|| La energía media es: 0.010623937606239376
+|| El calor específico es: 14.93960553366388
+|| Red 4x4
+|| T = 3.0 K
+|| 16000000 iteraciones
+|| Tiempo de ejecución: 97.61788272857666
+
+|| Magnetización promedio total: 0.00031246875312468755
+|| La energía media es: -0.0015623437656234376
+|| El calor específico es: 15.148221506299857
+|| Red 4x4
+|| T = 3.0 K
+|| 16000000 iteraciones
+|| Tiempo de ejecución: 99.23778939247131
+
+|| Magnetización promedio total: 0.0014623537646235377
+|| La energía media es: -0.007311768823117688
+|| El calor específico es: 15.02858210204377
+|| Red 4x4
+|| T = 3.0 K
+|| 16000000 iteraciones
+|| Tiempo de ejecución: 99.32128429412842
+
