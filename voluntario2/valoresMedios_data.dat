@@ -66,3 +66,11 @@
  36000000 iteraciones
  Tiempo de ejecución: 343.28
 
+|| Magnetización promedio total: +0.0053
+|| Energía media: -0.0397
+|| Calor específico: +95.8866
+|| Temperatura = 2.0
+ Red 6x6
+ 36000000 iteraciones
+ Tiempo de ejecución: 217.06
+
