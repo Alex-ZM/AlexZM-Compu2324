@@ -5,20 +5,21 @@ import time
 
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
-N = 4           # Dimensión de la cuadrícula
-T = 3.0         # Temperatura T = [0,5]
+N = 6           # Dimensión de la cuadrícula
+T = 2.0         # Temperatura T = [0,5]
 t = 10**6*N**2  # Tiempo
 
 magnProm = []  # Magnetización promedio de cada macroestado
-E = []  # Energía de cada macroestado
+E = []         # Energía de cada macroestado
 ECuad = []
 
 # CREACIÓN DE LA MATRIZ DE ESPINES s
 s = np.ones((N,N),dtype=int) 
 
 cienPMC = 100*N**2
-
+Ncuad = N**2
 ini = time.time()
+
 for v in range(1,10002):
 
     for _ in range(0,cienPMC):
@@ -61,7 +62,7 @@ for v in range(1,10002):
         
 
     # Cada 100pmc calcula promedios:
-    magnProm.append(np.sum(s)/N**2)
+    magnProm.append(np.sum(s)/Ncuad)
 
     E_i = 0
     for i in range(0,N):
@@ -96,12 +97,16 @@ for i in range(len(E)):
 wd = os.path.dirname(__file__)          # Directorio de trabajo
 rd = "valoresMedios_data.dat"           # Directorio relativo
 
-# Guardamos los resultados en el fichero
+magnetizacionPromedio = np.mean(magnProm)
+energiaMedia = np.mean(E)/(2*N)
+calorEspecifico = (np.mean(ECuad)-np.mean(E)**2)/(T*N**2)
+
+# Guardamos los resultados en el fichero:
 fichero = open(os.path.join(wd,rd), "a")  
-fichero.write("|| Magnetización promedio total: " + str(np.mean(magnProm)))
-fichero.write("\n|| La energía media es: " + str(np.mean(E)/(2*N)))
-fichero.write("\n|| El calor específico es: " + str((np.mean(ECuad)-np.mean(E)**2)/(T*N**2)))
+fichero.write("|| Magnetización promedio total: " + f"{magnetizacionPromedio:+.4f}")
+fichero.write("\n|| Energía media: " + f"{energiaMedia:+.4f}")
+fichero.write("\n|| Calor específico: " + f"{calorEspecifico:+.4f}")
 fin = time.time()
-fichero.write("\n|| Red "+str(N)+"x"+str(N)+"\n|| T = "+str(T)+" K\n|| "+str(t)+" iteraciones")
-fichero.write("\n|| Tiempo de ejecución: "+str(fin-ini)+"\n\n")
+fichero.write("\n|| Temperatura = "+str(T)+"\n Red "+str(N)+"x"+str(N)+"\n "+str(t)+" iteraciones")
+fichero.write("\n Tiempo de ejecución: "+f"{(fin-ini):.2f}"+"\n\n")
 fichero.close()
