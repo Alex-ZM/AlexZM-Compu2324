@@ -2,21 +2,19 @@ import random
 import numpy as np
 import os
 import time
-from numba import jit
 
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
-N = 10    # Dimensión de la cuadrícula
-T = 0.5    # Temperatura T = [0,5]
-t = 50000  # Tiempo
-skip = 1
+N = 64    # Dimensión de la cuadrícula
+T = 1.44    # Temperatura T = [0,5]
+t = 2000000  # Tiempo
+skip = 1000
 
 # CREACIÓN DE LA MATRIZ DE ESPINES s
 s = np.random.choice([-1,+1], size=(N,N)).astype(np.int8)
 
 
-#@jit(nopython=True, fastmath=True, cache=True)
-def bordes(N):
+def monteCarlo(N):
     i = random.randint(0,N-1)  # Se elije una partícula aleatoria
     j = random.randint(0,N-1)  #
     if i==N-1:      #
@@ -37,24 +35,14 @@ def bordes(N):
     else:            # 
         left = j-1   # 
         right = j+1  # 
-    return i,j,up,down,left,right
-
-
-#@jit(nopython=True, fastmath=True, cache=True)
-def funcDeltaE(i,j,up,down,left,right):
     deltaE = 2*s[i,j]*(s[up,j]+s[down,j]+s[i,left]+s[i,right])
-    return deltaE
-
-
-#@jit(nopython=True, fastmath=True, cache=True)
-def flipCheck(deltaE):
     pE = np.exp(-deltaE/T)
     if 1<pE:     # 
         p = 1    # Evaluación de p
     else:        # 
         p = pE   # 
     n = random.random()  # Número aleatorio entre 0 y 1
-    return n,p
+    return n,p,i,j
 
 
 wd = os.path.dirname(__file__)  # Directorio de trabajo
@@ -63,13 +51,9 @@ fichero = open(os.path.join(wd,rd), "w")
 
 
 ini = time.time()
-for w in range(0,t):
+for w in range(t):
 
-    i,j,up,down,left,right = bordes(N)
-
-    dE = funcDeltaE(i,j,up,down,left,right)
-
-    n,p =flipCheck(dE)
+    n,p,i,j = monteCarlo(N)
 
     if n<p:                 # Cambio del espín (i,j)
         s[i,j] = -s[i,j]    # 
@@ -77,12 +61,12 @@ for w in range(0,t):
     # Se guarda el estado de la red en este instante
     if w%skip==0:
         fichero.write("\n")
-        for i in range(0,N):
+        for i in range(N):
             fichero.write(' '.join(map(str, s[i])) + "\n")
         
 
 fin = time.time()
-print("|| N = "+str(N)+"\n|| T = "+str(T)+" s\n|| "+str(t)+" iteraciones")
-print("Tiempo de ejecución: "+str(fin-ini))
+print("\n|| Red "+str(N)+"x"+str(N)+"\n|| T = "+str(T)+"\n|| "+str(t)+" iteraciones (~"+f"{(t/N**2):.0f}"+" pmc)")
+print("----> Tiempo de ejecución: "+f"{(fin-ini):.2f}"+" s\n")
 
 fichero.close()
