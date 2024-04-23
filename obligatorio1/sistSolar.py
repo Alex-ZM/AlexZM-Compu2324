@@ -1,6 +1,7 @@
 # Simulación del sistema solar
 import numpy as np
 import time
+import os
 
 
 # Definimos algunas constantes (Sistema Internacional - reescalado)
@@ -8,12 +9,14 @@ masaSolar = 1.98855*10**30  # Masa del Sol
 UA = 1.496*10**11  # Distancia Tierra-Sol
 G = 6.67*10**(-11)  # Cte de Gravitación Universal
 h = 0.0001          # <---------- Paso temporal, inverso a la precisión (CAMBIAR)
-nIter = 10000     # <---------- Número de iteraciones (CAMBIAR)
-skip = 50          # <---------- Cada cuántas iteraciones guarda datos en los ficheros (CAMBIAR)
+nIter = 1000000     # <---------- Número de iteraciones (CAMBIAR)
+skip = 500          # <---------- Cada cuántas iteraciones guarda datos en los ficheros (CAMBIAR)
 guardarVelocidades = False  # <--- Elije si guardar también las velocidades (CAMBIAR)
 t = 0
-nPlanetas = 25
+nPlanetas = 8
 tEjecIni = time.time()
+
+hMedios = h/2
 
 
 def reescalarV(v):  # Función para reescalar t
@@ -136,12 +139,12 @@ def a(i):  # Valor de la aceleración del planeta i en el instante actual
     for j in range(0, nPlanetas):
         if i != j:
             R = np.subtract(r[i], r[j])
-            aFinal = aFinal - (m[j] * R)/(np.linalg.norm(R))**3
+            aFinal = aFinal - (m[j]*R)/(np.linalg.norm(R))**3
     return aFinal
 
 
 def w(i):  #Valor de w del planeta i
-    return (v[i] + (h/2)*a(i))
+    return (v[i] + (hMedios)*a(i))
 
 
 def evR(i):  # Evolución temporal de la posición del planeta i
@@ -153,20 +156,24 @@ def evA(i):  # Evolución temporal de la aceleración del planeta i
     for j in range(0,nPlanetas):
         if i != j:
             R = np.subtract(evR(i), evR(j))
-            aFinal = aFinal - (m[j] * R)/(np.linalg.norm(R))**3
+            aFinal = aFinal - (m[j]*R)/(np.linalg.norm(R))**3
     return aFinal
 
 
 def evV(i):  # Evolución temporal de la velocidad del planeta i
-    return (w(i) + (h/2)*evA(i))
+    return (w(i) + (hMedios)*evA(i))
 
 
 # Ahora solo queda programar el bucle y guardar los resultados de cada iteración en el
 # formato correcto y dentro de un fichero, para poder representarlos luego.
-ficheroPlot = open("planets_data.dat", "w")
+wd = os.path.dirname(__file__)      # Directorio de trabajo
+planetasPath = os.path.join(wd,"planets_data.dat") # Nombre del fichero de datos
+posicionesPath = os.path.join(wd,"posiciones_data") # Nombre del fichero de datos
+velocidadesPath = os.path.join(wd,"velocidades") # Nombre del fichero de datos
+ficheroPlot = open(planetasPath, "w")
 if guardarVelocidades:
-    ficheroPosiciones = open("posiciones.dat", "w")
-    ficheroVelocidades = open("velocidades.dat", "w")
+    ficheroPosiciones = open(posicionesPath, "w")
+    ficheroVelocidades = open(velocidadesPath, "w")
 for j in range(nIter):
 
     if j%skip==0:  # Guardamos la posición de los planetas cada "skip" iteraciones

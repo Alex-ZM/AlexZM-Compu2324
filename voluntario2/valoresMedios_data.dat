@@ -1,26 +1,26 @@
-|| Magnetización promedio total: +0.1089
-|| Energía media: -0.8168
-|| Calor específico: +144.4013
-|| Temperatura = 1.5
+|| Magnetización promedio total: +1.0000
+|| Energía media: -7.5000
+|| Calor específico: +0.0000
+|| Temperatura = 0.5
  Red 6x6
  36000000 iteraciones
- Tiempo de ejecución: 317.57
+ Tiempo de ejecución: 219.02
 
-|| Magnetización promedio total: +0.9865
-|| Energía media: -7.3989
-|| Calor específico: +0.1629
-|| Temperatura = 1.5
+|| Magnetización promedio total: +1.0000
+|| Energía media: -7.5000
+|| Calor específico: +0.0000
+|| Temperatura = 0.5
  Red 6x6
  36000000 iteraciones
- Tiempo de ejecución: 354.15
+ Tiempo de ejecución: 214.12
 
-|| Magnetización promedio total: +0.8204
-|| Energía media: -6.1532
-|| Calor específico: +45.0819
-|| Temperatura = 1.5
+|| Magnetización promedio total: +1.0000
+|| Energía media: -7.5000
+|| Calor específico: +0.0000
+|| Temperatura = 0.5
  Red 6x6
  36000000 iteraciones
- Tiempo de ejecución: 345.42
+ Tiempo de ejecución: 220.31
 
 
 
@@ -47,6 +47,32 @@
  Red 6x6
  36000000 iteraciones
  Tiempo de ejecución: 350.04
+
+
+
+|| Magnetización promedio total: +0.1089
+|| Energía media: -0.8168
+|| Calor específico: +144.4013
+|| Temperatura = 1.5
+ Red 6x6
+ 36000000 iteraciones
+ Tiempo de ejecución: 317.57
+
+|| Magnetización promedio total: +0.9865
+|| Energía media: -7.3989
+|| Calor específico: +0.1629
+|| Temperatura = 1.5
+ Red 6x6
+ 36000000 iteraciones
+ Tiempo de ejecución: 354.15
+
+|| Magnetización promedio total: +0.8204
+|| Energía media: -6.1532
+|| Calor específico: +45.0819
+|| Temperatura = 1.5
+ Red 6x6
+ 36000000 iteraciones
+ Tiempo de ejecución: 345.42
 
 
 

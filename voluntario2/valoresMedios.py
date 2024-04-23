@@ -6,7 +6,7 @@ import time
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
 N = 6           # Dimensión de la cuadrícula
-T = 2.0         # Temperatura T = [0,5]
+T = 0.5         # Temperatura T = [0,5]
 t = 10**6*N**2  # Tiempo
 
 magnProm = []  # Magnetización promedio de cada macroestado

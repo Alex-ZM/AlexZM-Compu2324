@@ -44,10 +44,13 @@ from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.patches import Circle
 import numpy as np
+import os
 
 # Parámetros
 # ========================================
-file_in = "planets_data.dat" # Nombre del fichero de datos
+wd = os.path.dirname(__file__)      # Directorio de trabajo
+rd = "planets_data.dat"               # Directorio relativo
+file_in = os.path.join(wd,rd) # Nombre del fichero de datos
 file_out = "planetas" # Nombre del fichero de salida (sin extensión)
 
 # Límites de los ejes X e Y
