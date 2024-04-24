@@ -1,3 +1,4 @@
+
 || Magnetización promedio total: +1.0000
 || Energía media: -7.5000
 || Calor específico: +0.0000
@@ -22,7 +23,7 @@
  36000000 iteraciones
  Tiempo de ejecución: 220.31
 
-
+-------------------------------------------------------
 
 || Magnetización promedio total: +0.9992
 || Energía media: -7.4939
@@ -48,7 +49,7 @@
  36000000 iteraciones
  Tiempo de ejecución: 350.04
 
-
+-------------------------------------------------------
 
 || Magnetización promedio total: +0.1089
 || Energía media: -0.8168
@@ -74,7 +75,7 @@
  36000000 iteraciones
  Tiempo de ejecución: 345.42
 
-
+-------------------------------------------------------
 
 || Magnetización promedio total: -0.0323
 || Energía media: +0.2426
