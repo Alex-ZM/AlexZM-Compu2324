@@ -5,7 +5,7 @@ import time
 
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
-N = 6           # Dimensión de la cuadrícula
+N = 8           # Dimensión de la cuadrícula
 T = 0.5         # Temperatura T = [0,5]
 t = 10**6*N**2  # Tiempo
 
@@ -107,6 +107,6 @@ fichero.write("|| Magnetización promedio total: " + f"{magnetizacionPromedio:+.
 fichero.write("\n|| Energía media: " + f"{energiaMedia:+.4f}")
 fichero.write("\n|| Calor específico: " + f"{calorEspecifico:+.4f}")
 fin = time.time()
-fichero.write("\n|| Temperatura = "+str(T)+"\n Red "+str(N)+"x"+str(N)+"\n "+str(t)+" iteraciones")
+fichero.write("\n|| Temperatura = "+str(T)+"\n Red "+str(N)+"x"+str(N)+"\n "+str(t)+" iteraciones (~"+f"{(t/N**2):.0f}"+" pmc)")
 fichero.write("\n Tiempo de ejecución: "+f"{(fin-ini):.2f}"+"\n\n")
 fichero.close()
