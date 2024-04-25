@@ -49,7 +49,7 @@ import os
 # Parámetros
 # ========================================
 wd = os.path.dirname(__file__)      # Directorio de trabajo
-rd = "planets_data.dat"               # Directorio relativo
+rd = "planets_dataN.dat"               # Directorio relativo
 file_in = os.path.join(wd,rd) # Nombre del fichero de datos
 file_out = "planetas" # Nombre del fichero de salida (sin extensión)
 
