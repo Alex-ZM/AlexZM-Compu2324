@@ -54,8 +54,8 @@ file_in = os.path.join(wd,rd) # Nombre del fichero de datos
 file_out = "planetas" # Nombre del fichero de salida (sin extensión)
 
 # Límites de los ejes X e Y
-x_min =  -1
-x_max =  11
+x_min =  -4
+x_max =  15
 y_min =  -1
 y_max =  11
 
@@ -69,7 +69,7 @@ dpi = 300 # Calidad del vídeo de salida (dots per inch)
 # Radio del planeta, en las mismas unidades que la posición
 # Puede ser un número (el radio de todos los planetas) o una lista con
 # el radio de cada uno
-planet_radius = 0.05
+planet_radius = 0.5
 #planet_radius = [0.5, 0.7, 1.1]
 
 
