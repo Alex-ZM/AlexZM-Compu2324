@@ -4,8 +4,9 @@ import random
 import time
 import os
 
+###################################################################################################################
 
-# Definimos algunas constantes (Sistema Internacional - reescalado)
+# Definimos algunas constantes
 h = 0.0001    
 nIter = 1000000     
 nParticulas = 5
