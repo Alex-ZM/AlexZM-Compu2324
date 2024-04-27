@@ -1,5 +1,6 @@
 # Simulación del sistema solar
 import numpy as np
+import random
 import time
 import os
 
@@ -8,9 +9,10 @@ import os
 h = 0.0001          # <---------- Paso temporal, inverso a la precisión (CAMBIAR)
 nIter = 1000000     # <---------- Número de iteraciones (CAMBIAR)
 t = 0
-nParticulas = 2
+nParticulas = 28
 tEjecIni = time.time()
 L = 10
+margen = 0.5
 hMedios = h/2
 
 # Definimos (y reescalamos) los parámetros iniciales de los planetas
@@ -18,17 +20,28 @@ m = np.full(nParticulas,1).astype(np.int8)
 
 r = np.zeros((nParticulas,2))
 
-particulasPorFila = np.floor(np.sqrt(nParticulas))
-particulasUltimaFila = nParticulas-particulasPorFila**2
+# POSICIONAMIENTO EQUIESPACIADO DE LOS PLANETAS
+particulasPorFila = int(np.floor(np.sqrt(nParticulas)))
 separacionInicial = L/particulasPorFila
-if particulasUltimaFila == 0:
-    nFilasInicial = particulasPorFila+1
-else: nFilasInicial = particulasPorFila
+for f in range(particulasPorFila):
+    for i in range(particulasPorFila):  
+        r[f*particulasPorFila+i,1] = i*separacionInicial  # Equiespaciado horizontal
+particulasUltimaFila = nParticulas-particulasPorFila**2
+if particulasUltimaFila != 0:
+    for i in range(particulasUltimaFila):
+        r[particulasPorFila**2+i,1] = i*separacionInicial  # Equiespaciado horizontal (última fila)
 
-for f in range(nFilasInicial):
+for c in range(particulasPorFila):
     for i in range(particulasPorFila):
-        r[f,i] = i*separacionInicial
+        r[c*particulasPorFila+i,0] = c*separacionInicial  # Equiespaciado vertical
+if particulasUltimaFila != 0:
+    for i in range(particulasUltimaFila):
+        r[particulasPorFila**2+i,0] = particulasPorFila*separacionInicial  # Equiespaciado vertical (última fila)
 
+# LIGEROS DESPLAZAMIENTOS ALEATORIOS
+for i in range(nParticulas):
+    r[i,0] += (2*random.random() - 1)*margen  # Desplaza aleatoriamente en la componente X (+-margen)
+    r[i,1] += (2*random.random() - 1)*margen  # Desplaza aleatoriamente en la componente Y (+-margen)
 
 
 def a(i):  # Valor de la aceleración del planeta i en el instante actual
