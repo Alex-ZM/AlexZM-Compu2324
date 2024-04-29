@@ -6,17 +6,18 @@ import numpy as np
 import random
 import time
 import os
+from numba import jit
 
 ###################################################################################################################
 
 # Definimos algunas constantes
 h = 0.00002    
-nIter = 100000     
-nParticulas = 5
+nIter = 50000     
+nParticulas = 6
 tEjecIni = time.time()
 L = 10
-margen = 0.05
-skip = 5
+margen = 0.5
+skip = 1
 hMedios = h/2
 lMedios = L/2
 
@@ -58,8 +59,8 @@ if particulasUltimaFila != 0:
 
 # CONDICIONES INICIALES - VELOCIDADES ALEATORIAS
 for i in range(nParticulas):
-    v[i,0] = 5*random.random()
-    v[i,1] = 5*random.random()
+    v[i,0] = 4000*random.random()
+    v[i,1] = 4000*random.random()
 
 # CONDICIONES INICIALES - POSICIONES ALEATORIAS
 for i in range(nParticulas):
@@ -67,6 +68,7 @@ for i in range(nParticulas):
     r[i,1] += (2*random.random()-1)*margen  # Desplaza aleatoriamente en la componente Y (+-margen)
 
 # CONDICIONES DE CONTORNO PERIÓDICO - RECOLOCACIÓN DE PARTÍCULAS 
+@jit(nopython=True,fastmath=True)
 def bordes(v,p):
     evX = v[p,0]
     evY = v[p,1]
@@ -81,13 +83,14 @@ def bordes(v,p):
     return np.array([evX,evY])
 
 # CONDICIONES DE CONTORNO PERIÓDICO - DISTANCIA MÍNIMA ENTRE DOS PARTÍCULAS 
+@jit(nopython=True,fastmath=True)
 def distanciaToroide(vector,p,j):
     distX = np.abs(vector[p,0]-vector[j,0])
     distY = np.abs(vector[p,1]-vector[j,1])
     if distX > lMedios:
-        distX = distX - lMedios
+        distX = L - distX
     if distY > lMedios:
-        distY = distY - lMedios
+        distY = L - distY
     return np.array([distX,distY])
 
 ###################################################################################################################
@@ -113,7 +116,7 @@ for t in range(nIter):
             #ficheroV.write(str(V[p])+"\n")  # Energía potencial -> Fichero
         ficheroPlot.write("\n")  
 
-    for p in range(nParticulas):  # Cada iteración, calcula r y v para cada una de las partículas
+    for p in range(nParticulas):  # Cada iteración, calcula la evolución de cada una de las partículas
 
         for j in range(nParticulas):
             r[j] = bordes(r,j)
