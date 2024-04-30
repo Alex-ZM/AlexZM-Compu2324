@@ -59,8 +59,8 @@ if particulasUltimaFila != 0:
 
 # CONDICIONES INICIALES - VELOCIDADES ALEATORIAS
 for i in range(nParticulas):
-    v[i,0] = 4000*random.random()
-    v[i,1] = 4000*random.random()
+    v[i,0] = random.random()
+    v[i,1] = 1-v[i,0]
 
 # CONDICIONES INICIALES - POSICIONES ALEATORIAS
 for i in range(nParticulas):
@@ -68,7 +68,7 @@ for i in range(nParticulas):
     r[i,1] += (2*random.random()-1)*margen  # Desplaza aleatoriamente en la componente Y (+-margen)
 
 # CONDICIONES DE CONTORNO PERIÓDICO - RECOLOCACIÓN DE PARTÍCULAS 
-@jit(nopython=True,fastmath=True)
+#@jit(nopython=True,fastmath=True)
 def bordes(v,p):
     evX = v[p,0]
     evY = v[p,1]
@@ -83,14 +83,14 @@ def bordes(v,p):
     return np.array([evX,evY])
 
 # CONDICIONES DE CONTORNO PERIÓDICO - DISTANCIA MÍNIMA ENTRE DOS PARTÍCULAS 
-@jit(nopython=True,fastmath=True)
+#@jit(nopython=True,fastmath=True)
 def distanciaToroide(vector,p,j):
     distX = np.abs(vector[p,0]-vector[j,0])
     distY = np.abs(vector[p,1]-vector[j,1])
     if distX > lMedios:
-        distX = L - distX
+        distX = distX - L
     if distY > lMedios:
-        distY = L - distY
+        distY = distY-L
     return np.array([distX,distY])
 
 ###################################################################################################################
@@ -126,7 +126,7 @@ for t in range(nIter):
             if p != j:
                 R = distanciaToroide(r,p,j)
                 normaR = np.linalg.norm(R)
-                aux1 = aux1 - (24/normaR**7 - 48/normaR**13)*(R/normaR)
+                aux1 = aux1 + (48/normaR**13 - 24/normaR**7)*R/normaR
         a[p] = aux1
      
         w[p] = v[p]+hMedios*a[p]  # w
@@ -138,7 +138,7 @@ for t in range(nIter):
             if p != j:
                 R = distanciaToroide(evR,p,j)
                 normaR = np.linalg.norm(R)
-                aux1 = aux1 - (24/normaR**7 - 48/normaR**13)*(R/normaR)
+                aux2 = aux2 + (48/normaR**13 - 24/normaR**7)*R/normaR
         evA[p] = aux2
        
         evV[p] = w[p]+hMedios*evA[p]  # evV
