@@ -49,7 +49,7 @@ import os
 # Parámetros
 # ========================================
 wd = os.path.dirname(__file__)  # Directorio de trabajo
-rd = "posParticulas.dat"        # Directorio relativo
+rd = "seisParticulas.dat"        # Directorio relativo
 file_in = os.path.join(wd,rd) # Nombre del fichero de datos
 file_out = "planetas" # Nombre del fichero de salida (sin extensión)
 
@@ -59,7 +59,7 @@ x_max =  15
 y_min =  -1
 y_max =  11
 
-interval = 1 # Tiempo entre fotogramas en milisegundos
+interval = 10 # Tiempo entre fotogramas en milisegundos
 show_trail = True # Muestra la "estela" del planeta
 trail_width = 1 # Ancho de la estela
 save_to_file = False # False: muestra la animación por pantalla,
