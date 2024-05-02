@@ -9,9 +9,9 @@ import os
 ###################################################################################################################
 
 # DEFINICIÓN DE PARÁMETROS
-N = 350
+N = 400
 nCiclos = int(N/4)
-lmbd = 100
+lmbd = 0.5
 
 skip = 3
 
@@ -26,12 +26,12 @@ calc3N5 = int(3*N/5)
 Vj = np.zeros(int(calc2N5))
 VjAux = np.zeros(calc3N5-calc2N5)
 for i in range(len(VjAux)):
-    VjAux[i] = 0.006*lmbd*k_0**2
+    VjAux[i] = lmbd*k_0**2
 Vj = np.append(Vj,VjAux)
 Vj = np.append(Vj,np.zeros(N-len(Vj)))
 
 phi = np.zeros(N,dtype=np.complex64)
-for j in range(len(phi)):
+for j in range(N):
     phi[j] = np.exp(1j*k_0*j-8*(4*j-N)**2/N**2)
 phi[0] = 0
 phi[N-1] = 0
@@ -39,7 +39,7 @@ phi[N-1] = 0
 gamma = np.zeros(N,dtype=np.complex64)
 alpha = np.zeros(N,dtype=np.complex64)
 A_0 = np.zeros(N,dtype=np.complex64)
-for j in reversed(range(1,N)):
+for j in range(N-1,0,-1):
     A_0[j] = -2+2j/s-Vj[j]
     gamma[j] = 1/(A_0[j]+alpha[j])
     alpha[j-1] = -gamma[j]
@@ -64,11 +64,11 @@ tIni = time.time()
 
 for t in range(nIter):
 
-    for j in reversed(range(N)):
+    for j in range(N):
         b[j] = 4j*phi[j]/s
 
     beta[N-1] = 0
-    for j in reversed(range(N)):
+    for j in range(N-1,1,-1):
         beta[j-1] = gamma[j]*(b[j]-beta[j])
     beta[0] = 0  # ¿Sobra?
 
@@ -89,5 +89,5 @@ for t in range(nIter):
         print(str(norma))
 
 tFin = time.time()
-fichero.write("# Tiempo: "+str(tFin-tIni))
+print("# Tiempo: "+str(tFin-tIni))
     
