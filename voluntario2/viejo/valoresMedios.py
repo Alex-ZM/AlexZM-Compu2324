@@ -65,8 +65,8 @@ for v in range(1,10002):
     magnProm.append(np.sum(s)/Ncuad)
 
     E_i = 0
-    for i in range(0,N):
-        for j in range(0,N):
+    for i in range(N):
+        for j in range(N):
                 if i==N-1:      #
                     up = i-1    #
                     down = 0    #
