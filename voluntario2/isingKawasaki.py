@@ -60,23 +60,29 @@ for w in range(t):
 
     i = random.randint(0,N-1)   # Se elijen dos partículas aleatorias vecinas
     j = random.randint(0,N-1)   # p1=(i,j) ; p2=(u,v)
-    u = i + random.choice(-1,1) #
-    v = j + random.choice(-1,1) #
-    
-    up1,down1,left1,right1 = condContorno(i,j)
-    up2,down2,left2,right2 = condContorno(u,v)
+    flip = random.choice(-1,1)
+    if flip == -1: 
+        u = i + 1 
+    else: 
+        v = j + 1 
 
-    deltaE = 2*s[i,j]*(s[up1,j]+s[down1,j]+s[i,left1]+s[i,right1])###########  RECALCULAR NUEVA ENERGÍA Y CAMBIAR ESTA
-    pE = np.exp(-deltaE/T)
-    if 1<pE:     # 
-        p = 1    # Evaluación de p
-    else:        # 
-        p = pE   # 
-    n = random.random()  # Número aleatorio entre 0 y 1
+    # Si las dos partículas tienen igual espín, no hacer nada
+    # Si las dos partículas tienen diferente espín, calcular energía y probabilidad
+    if s[i,j] != s[u,v]:  
+        up1,down1,left1,right1 = condContorno(i,j)
+        up2,down2,left2,right2 = condContorno(u,v)
 
-    # PERMUTACIÓN DE ESPINES s1,s2 = s2,s1
-    if n<p:  
-        s[i,j], s[u,v] = s[u,v], s[i,j]     
+        deltaE = 2*s[i,j]*(s[up1,j]+s[down1,j]+s[i,left1]+s[i,right1])###########  RECALCULAR NUEVA ENERGÍA Y CAMBIAR ESTA
+        pE = np.exp(-deltaE/T)
+        if 1<pE:     # 
+            p = 1    # Evaluación de p
+        else:        # 
+            p = pE   # 
+        n = random.random()  # Número aleatorio entre 0 y 1
+
+        # PERMUTACIÓN DE ESPINES s1,s2 = s2,s1
+        if n<p:  
+            s[i,j], s[u,v] = s[u,v], s[i,j]     
     
     # Se guarda el estado de la red en este instante
     if w%skip==0:
