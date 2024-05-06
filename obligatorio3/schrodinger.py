@@ -85,7 +85,7 @@ for t in range(nIter):
             fichero.write(str(j)+","+str(np.abs(phi[j]**2))+","+str(Vj[j])+"\n")
             norma += np.abs(phi[j]**2)
         fichero.write("\n")
-        print(str(norma))
+        print(f"{(norma):.7f}")
 
 tFin = time.time()
 print("# Tiempo: "+str(tFin-tIni))

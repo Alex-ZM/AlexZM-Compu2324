@@ -10,10 +10,10 @@ import time
 ###################################################################################################################
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
-N = 12    # Dimensión de la cuadrícula
-T = 2.828    # Temperatura T = [0,5]
-t = 20000  # Tiempo
-skip = 10
+N = 32    # Dimensión de la cuadrícula
+T = 1    # Temperatura T = [0,5]
+t = 200000  # Tiempo
+skip = 40
 
 # CREACIÓN DE LA MATRIZ DE ESPINES s
 s = np.random.choice([-1,+1], size=(N,N)).astype(np.int8)
@@ -52,7 +52,7 @@ def condContorno(i,j):
 ###################################################################################################################
 
 wd = os.path.dirname(__file__)  # Directorio de trabajo
-rd = "ising_data.dat"           # Directorio relativo
+rd = "isingKawasaki_data.dat"           # Directorio relativo
 fichero = open(os.path.join(wd,rd), "w")  
 
 ini = time.time()
@@ -60,11 +60,19 @@ for w in range(t):
 
     i = random.randint(0,N-1)   # Se elijen dos partículas aleatorias vecinas
     j = random.randint(0,N-1)   # p1=(i,j) ; p2=(u,v)
-    flip = random.choice(-1,1)
+    flip = np.random.choice([-1,1])
     if flip == -1: 
-        u = i + 1 
+        if i != N-1:
+            u = i + 1
+        else:
+            u = 0 
+        v = j
     else: 
-        v = j + 1 
+        u = i
+        if j != N-1:
+            v = j + 1 
+        else:
+            v = 0
 
     # Si las dos partículas tienen igual espín, no hacer nada
     # Si las dos partículas tienen diferente espín, calcular energía y probabilidad
@@ -72,7 +80,11 @@ for w in range(t):
         up1,down1,left1,right1 = condContorno(i,j)
         up2,down2,left2,right2 = condContorno(u,v)
 
-        deltaE = 2*s[i,j]*(s[up1,j]+s[down1,j]+s[i,left1]+s[i,right1])###########  RECALCULAR NUEVA ENERGÍA Y CAMBIAR ESTA
+        if flip == -1:
+            deltaE = 2*s[i,j]*(s[i,right1]+s[i,left1]+s[up1,j]-s[u,right2]-s[u,left2]-s[down2,v]) # Pareja vertical
+        else:
+            deltaE = 2*s[i,j]*(s[up1,j]+s[down1,j]+s[i,left1]-s[up2,v]-s[down2,v]-s[u,right2]) # Pareja horizontal
+
         pE = np.exp(-deltaE/T)
         if 1<pE:     # 
             p = 1    # Evaluación de p
