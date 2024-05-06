@@ -9,15 +9,14 @@ import os
 ###################################################################################################################
 
 # DEFINICIÓN DE PARÁMETROS (Parámetros test: N=200, lmbd=0.5, tiempo = 500)
-N = 400
+N = 200
 nCiclos = int(N/4)
-lmbd = 0.5
-tiempo = 500
+lmbd = 10
 skip = 3
+nIter = 5000
 
 k_0 = 2*np.pi*nCiclos/N
 s = 1/(4*k_0**2)
-nIter = int(np.floor(tiempo/s))
 
 # VECTOR POTENCIAL
 calc2N5 = int(2*N/5)

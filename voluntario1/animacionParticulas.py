@@ -69,7 +69,7 @@ dpi = 300 # Calidad del vídeo de salida (dots per inch)
 # Radio del planeta, en las mismas unidades que la posición
 # Puede ser un número (el radio de todos los planetas) o una lista con
 # el radio de cada uno
-planet_radius = 0.1
+planet_radius = 0.2
 #planet_radius = [0.5, 0.7, 1.1]
 
 

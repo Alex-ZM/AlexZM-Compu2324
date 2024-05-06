@@ -1,22 +1,22 @@
-import random
 import numpy as np
 import os
 import time
+from numba import jit
 
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
-N = 120    # Dimensión de la cuadrícula
-T = 2.828    # Temperatura T = [0,5]
-t = 20000000  # Tiempo
-skip = 10000
+N = 32    # Dimensión de la cuadrícula
+T = 1    # Temperatura T = [0,5]
+t = 20000  # Tiempo
+skip = 10
 
 # CREACIÓN DE LA MATRIZ DE ESPINES s
 s = np.random.choice([-1,+1], size=(N,N)).astype(np.int8)
 
-
-def monteCarlo(N):
-    i = random.randint(0,N-1)  # Se elije una partícula aleatoria
-    j = random.randint(0,N-1)  #
+@jit(nopython=True)
+def monteCarlo(N,s,T):
+    i = np.random.randint(0,N-1)  # Se elije una partícula aleatoria
+    j = np.random.randint(0,N-1)  #
     if i==N-1:      #
         up = i-1    #
         down = 0    #
@@ -41,7 +41,7 @@ def monteCarlo(N):
         p = 1    # Evaluación de p
     else:        # 
         p = pE   # 
-    n = random.random()  # Número aleatorio entre 0 y 1
+    n = np.random.uniform(0,1)  # Número aleatorio entre 0 y 1
     return n,p,i,j
 
 
@@ -53,7 +53,7 @@ fichero = open(os.path.join(wd,rd), "w")
 ini = time.time()
 for w in range(t):
 
-    n,p,i,j = monteCarlo(N)
+    n,p,i,j = monteCarlo(N,s,T)
 
     if n<p:                 # Cambio del espín (i,j)
         s[i,j] = -s[i,j]    # 
