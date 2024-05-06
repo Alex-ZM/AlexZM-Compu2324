@@ -49,18 +49,18 @@ import os
 # Parámetros
 # ========================================
 wd = os.path.dirname(__file__)  # Directorio de trabajo
-rd = "seisParticulas.dat"        # Directorio relativo
+rd = "pos40Particulas.dat"        # Directorio relativo
 file_in = os.path.join(wd,rd) # Nombre del fichero de datos
 file_out = "planetas" # Nombre del fichero de salida (sin extensión)
 
 # Límites de los ejes X e Y
-x_min =  -4
-x_max =  15
-y_min =  -1
-y_max =  11
+x_min =  0
+x_max =  10
+y_min =  0
+y_max =  10
 
 interval = 10 # Tiempo entre fotogramas en milisegundos
-show_trail = True # Muestra la "estela" del planeta
+show_trail = False # Muestra la "estela" del planeta
 trail_width = 1 # Ancho de la estela
 save_to_file = False # False: muestra la animación por pantalla,
                     # True: la guarda en un fichero
@@ -69,7 +69,7 @@ dpi = 300 # Calidad del vídeo de salida (dots per inch)
 # Radio del planeta, en las mismas unidades que la posición
 # Puede ser un número (el radio de todos los planetas) o una lista con
 # el radio de cada uno
-planet_radius = 0.25
+planet_radius = 0.1
 #planet_radius = [0.5, 0.7, 1.1]
 
 
@@ -116,6 +116,8 @@ fig, ax = plt.subplots()
 ax.axis("equal")  # Misma escala para ejes X e Y
 ax.set_xlim(x_min, x_max)
 ax.set_ylim(y_min, y_max)
+
+ax.plot([x_min,x_max,x_max,x_min,x_min], [y_min,y_min,y_max,y_max,y_min], 'k-')
 
 # Si solo se ha dado un radio para todos los planetas, conviértelo a una
 # lista con todos los elementos iguales

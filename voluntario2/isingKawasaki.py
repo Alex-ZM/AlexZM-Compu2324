@@ -11,25 +11,20 @@ import time
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
 N = 64    # Dimensión de la cuadrícula
-T =1    # Temperatura T = [0,5]
+T =4    # Temperatura T = [0,5]
 t = 200000  # Tiempo
 skip = 400
 
 # CREACIÓN DE LA MATRIZ DE ESPINES s
-s = np.random.choice([-1,+1], size=(N,N)).astype(np.int8)
+s = np.random.choice([-1,+1], size=(N+2,N)).astype(np.int8)
+for j in range(N):
+    s[0,j] = 0
+    s[N+1,j] = 0
+
 
 ###################################################################################################################
 
 def condContorno(i,j):
-    if i==N-1:      #
-        up = i-1    #
-        down = 0    #
-    elif i==0:      #
-        up = N-1    # Periodicidad vertical
-        down = 1    #
-    else:           #
-        up = i-1    #
-        down = i+1  #
     if j==N-1:       # 
         left = j-1   # 
         right = 0    # 
@@ -39,7 +34,7 @@ def condContorno(i,j):
     else:            # 
         left = j-1   # 
         right = j+1  # 
-    return up,down,left,right
+    return left,right
 
 ## CÁLCULO DE LA ENERGÍA DEL SISTEMA EN EL INSTANTE INICIAL
 #E = 0
@@ -58,14 +53,11 @@ fichero = open(os.path.join(wd,rd), "w")
 ini = time.time()
 for w in range(t):
 
-    i = random.randint(0,N-1)   # Se elijen dos partículas aleatorias vecinas
+    i = random.randint(1,N-1)   # Se elijen dos partículas aleatorias vecinas
     j = random.randint(0,N-1)   # p1=(i,j) ; p2=(u,v)
     flip = np.random.choice([-1,1])
     if flip == -1: 
-        if i != N-1:
-            u = i + 1
-        else:
-            u = 0 
+        u = i + 1
         v = j
     else: 
         u = i
@@ -77,8 +69,10 @@ for w in range(t):
     # Si las dos partículas tienen igual espín, no hacer nada
     # Si las dos partículas tienen diferente espín, calcular energía y probabilidad
     if s[i,j] != s[u,v]:  
-        up1,down1,left1,right1 = condContorno(i,j)
-        up2,down2,left2,right2 = condContorno(u,v)
+        up1,up2 = i-1,i-1
+        down1,down2 = i+1,i+1
+        left1,right1 = condContorno(i,j)
+        left2,right2 = condContorno(u,v)
 
         if flip == -1:
             deltaE = 2*s[i,j]*(s[i,right1]+s[i,left1]+s[up1,j]-s[u,right2]-s[u,left2]-s[down2,v]) # Pareja vertical
@@ -99,7 +93,7 @@ for w in range(t):
     # Se guarda el estado de la red en este instante
     if w%skip==0:
         fichero.write("\n")
-        for i in range(N):
+        for i in range(1,N+1):
             fichero.write(' '.join(map(str, s[i])) + "\n")
 
 

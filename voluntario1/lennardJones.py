@@ -11,13 +11,13 @@ from numba import jit
 ###################################################################################################################
 
 # Definimos algunas constantes
-h = 0.0002    
-nIter = 50000     
-nParticulas = 5
+h = 0.001    
+nIter = 10000     
+nParticulas = 40
 tEjecIni = time.time()
 L = 10
 margen = 0.5
-skip = 100
+skip = 10
 hMedios = h/2
 lMedios = L/2
 
@@ -59,8 +59,8 @@ if particulasUltimaFila != 0:
 
 # CONDICIONES INICIALES - VELOCIDADES ALEATORIAS
 for i in range(nParticulas):
-    v[i,0] = random.random()
-    v[i,1] = 1-v[i,0]
+    v[i,0] = 2*random.random()-1
+    v[i,1] = 1-np.abs(v[i,0])
 
 # CONDICIONES INICIALES - POSICIONES ALEATORIAS
 for i in range(nParticulas):
@@ -84,13 +84,13 @@ def bordes(v,p):
 
 # CONDICIONES DE CONTORNO PERIÓDICO - DISTANCIA MÍNIMA ENTRE DOS PARTÍCULAS 
 #@jit(nopython=True,fastmath=True)
-def distanciaToroide(vector,p,j):
-    distX = np.abs(vector[p,0]-vector[j,0])
-    distY = np.abs(vector[p,1]-vector[j,1])
-    if distX > lMedios:
-        distX = distX - L
-    if distY > lMedios:
-        distY = distY - L
+def distanciaToroide(vector,p,j,L):
+    distX = vector[p,0]-vector[j,0]
+    distY = vector[p,1]-vector[j,1]
+    if np.abs(distX) > lMedios:
+        distX = -(L-np.abs(distX))*(distX/np.abs(distX))
+    if np.abs(distY) > lMedios:
+        distY = -(L-np.abs(distY))*(distY/np.abs(distY))
     return np.array([distX,distY])
 
 # VERLET - ACELERACIÓN (t)
@@ -99,7 +99,7 @@ def aceleracion(r):
         aux1 = np.array([0.0,0.0])
         for j in range(nParticulas):
             if p != j:
-                R = distanciaToroide(r,p,j)
+                R = distanciaToroide(r,p,j,L)
                 normaR = np.linalg.norm(R)
                 aux1 = aux1 + (48/normaR**13 - 24/normaR**7)*R/normaR
         a[p] = aux1
@@ -116,18 +116,6 @@ def evPosicion(evR,r,w):
     for p in range(nParticulas):
         evR[p] = r[p]+h*w[p]
     return evR
-
-# VERLET - ACELERACIÓN (t+h)
-def evAceleracion(evR):
-    for p in range(nParticulas):
-        aux1 = np.array([0.0,0.0])
-        for j in range(nParticulas):
-            if p != j:
-                R = distanciaToroide(evR,p,j)
-                normaR = np.linalg.norm(R)
-                aux1 = aux1 + (48/normaR**13 - 24/normaR**7)*R/normaR
-        evA[p] = aux1
-    return evA
 
 # VERLET - VELOCIDAD (t+h)
 def evVelocidad(w,evA):
@@ -167,7 +155,7 @@ for t in range(nIter):
     evR = evPosicion(evR,r,w)
     for j in range(nParticulas):
             evR[j] = bordes(evR,j) 
-    evA = evAceleracion(evR)
+    evA = aceleracion(evR)
     evV = evVelocidad(w,evA)
 
     for p in range(nParticulas):  # EVOLUCIÓN TEMPORAL + CÁLCULO ENERGÍAS
