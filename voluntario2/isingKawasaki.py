@@ -10,10 +10,10 @@ import time
 ###################################################################################################################
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
-N = 32    # Dimensión de la cuadrícula
-T = 1    # Temperatura T = [0,5]
+N = 64    # Dimensión de la cuadrícula
+T =1    # Temperatura T = [0,5]
 t = 200000  # Tiempo
-skip = 40
+skip = 400
 
 # CREACIÓN DE LA MATRIZ DE ESPINES s
 s = np.random.choice([-1,+1], size=(N,N)).astype(np.int8)
