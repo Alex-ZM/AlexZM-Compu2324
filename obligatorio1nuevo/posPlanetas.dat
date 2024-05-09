@@ -10987,4 +10987,15 @@
 24.6784918076431, 17.009703339955283
 36.03509938490181, 15.323595649960906
 
-# Tiempo de ejecucion: 69.92309212684631
+# Se han realizado 1000000 iteraciones con h = 0.0001 y skip 1000
+#
+# Tiempo de ejecucion - ALGORITMO DE VERLET .............. 70.62084126472473
+# Tiempo de ejecucion - ESCRITURA DE DATOS EN FICHEROS ... 0.029744386672973633
+#
+# T(1) = 87.97306691248926 dias terrestres (vs. 87.969)
+# T(2) = 224.69879424012206 dias terrestres (vs. 224.699)
+# T(3) = 365.256 dias terrestres (vs. 365.256)
+# T(4) = 686.2642293779204 dias terrestres (vs. 686.979)
+# T(5) = 4374.793684478209 dias terrestres (vs. 4332.589)
+# T(6) = 11031.383712387551 dias terrestres (vs. 10759.23)
+#

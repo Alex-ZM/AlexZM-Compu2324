@@ -19,7 +19,6 @@ h = 0.0001
 nIteraciones = 1000000    
 skip = 1000         
 guardarVelocidades = False  # <--- Elije si guardar también las velocidades (CAMBIAR)
-t = 0
 nPlanetas = 10
 
 hMedios = h/2
@@ -65,20 +64,11 @@ v = np.array(
 
 ###################################################################################################################
 
+# DEFINICIÓN DE FUNCIÓN - ALGORITMO DE VERLET
 @jit(nopython=True,fastmath=True)
 def verlet(m,r,v,nIteraciones,nPlanetas,skip):
 
-    T = np.array(
-        [[1],
-        [1],
-        [1],
-        [1],
-        [1],
-        [1],
-        [1],
-        [1],
-        [1]])
-    
+    T = np.ones(10)
     posiciones = np.zeros((int(nIteraciones/skip),nPlanetas,2))
     velocidades = np.zeros((int(nIteraciones/skip),nPlanetas,2))
     a = np.zeros((nPlanetas,2))
@@ -128,7 +118,11 @@ def verlet(m,r,v,nIteraciones,nPlanetas,skip):
             r[p] = evR[p]
             v[p] = evV[p]
 
-    return posiciones,velocidades
+        for i in range(1,nPlanetas):
+            if T[i]==1 and r[i][1]<0:
+                T[i] = 2*t  # Guarda el período de cada planeta
+
+    return posiciones,velocidades,T
 
 ###################################################################################################################
 
@@ -136,11 +130,13 @@ wd = os.path.dirname(__file__)  # Directorio de trabajo
 datosPath = os.path.join(wd,"posPlanetas.dat")  
 ficheroPlot = open(datosPath, "w")
 
+# CÁLCULO DE POSICIONES, VELOCIDADES Y PERÍODOS MEDIANTE LA FUNCIÓN "verlet()"
 tEjecIni = time.time()
+r,v,T = verlet(m,r,v,nIteraciones,nPlanetas,skip)
+tEjecFin = time.time()
 
-r,v = verlet(m,r,v,nIteraciones,nPlanetas,skip)
-
-# BUCLE - ALGORITMO DE VERLET
+# ESCRITURA DE DATOS EN EL FICHERO
+tFicherosIni = time.time()
 for t in range(int(nIteraciones/skip-1)):
 
     for p in range(nPlanetas):
@@ -157,10 +153,19 @@ for t in range(int(nIteraciones/skip-1)):
         #        R = np.linalg.norm(distanciaToroide(r,p,j))
         #        V[p] += (R**(-12)-R**(-6))
         #V[p] = 4*V[p]
+tFicherosFin = time.time()
         
 ###################################################################################################################
 
 # Por último, escribimos algunos datos de interés al final del fichero
-#ficheroPlot.write("# Se han realizado "+str(nIter)+" iteraciones con h = "+str(h)+" y skip "+str(skip)+"\n")
-tEjecFin = time.time()
-ficheroPlot.write("# Tiempo de ejecucion: "+str(tEjecFin-tEjecIni))
+ficheroPlot.write("# Se han realizado "+str(nIteraciones)+" iteraciones con h = "+str(h)+" y skip "+str(skip)+"\n"+"#"+"\n")
+ficheroPlot.write("# Tiempo de ejecucion - ALGORITMO DE VERLET .............. "+str(tEjecFin-tEjecIni)+"\n")
+ficheroPlot.write("# Tiempo de ejecucion - ESCRITURA DE DATOS EN FICHEROS ... "+str(tFicherosFin-tFicherosIni)+"\n"+"#"+"\n")
+ficheroPlot.write("# T(1) = "+str(T[1]/T[3]*365.256)+" dias terrestres (vs. 87.969)\n")
+ficheroPlot.write("# T(2) = "+str(T[2]/T[3]*365.256)+" dias terrestres (vs. 224.699)\n")
+ficheroPlot.write("# T(3) = "+str(T[3]/T[3]*365.256)+" dias terrestres (vs. 365.256)\n")
+ficheroPlot.write("# T(4) = "+str(T[4]/T[3]*365.256)+" dias terrestres (vs. 686.979)\n")
+ficheroPlot.write("# T(5) = "+str(T[5]/T[3]*365.256)+" dias terrestres (vs. 4332.589)\n")
+ficheroPlot.write("# T(6) = "+str(T[6]/T[3]*365.256)+" dias terrestres (vs. 10759.23)\n"+"#"+"\n")
+
+ficheroPlot.close()
