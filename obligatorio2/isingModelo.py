@@ -1,8 +1,14 @@
+
+    #########################
+    ###  MODELO DE ISING  ###
+    #########################
+
 import numpy as np
 import os
 import time
 from numba import jit
 
+###################################################################################################################
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
 N = 32    # Dimensión de la cuadrícula
@@ -12,6 +18,8 @@ skip = 10
 
 # CREACIÓN DE LA MATRIZ DE ESPINES s
 s = np.random.choice([-1,+1], size=(N,N)).astype(np.int8)
+
+###################################################################################################################
 
 @jit(nopython=True)
 def monteCarlo(N,s,T):
@@ -44,11 +52,11 @@ def monteCarlo(N,s,T):
     n = np.random.uniform(0,1)  # Número aleatorio entre 0 y 1
     return n,p,i,j
 
+###################################################################################################################
 
 wd = os.path.dirname(__file__)  # Directorio de trabajo
 rd = "ising_data.dat"           # Directorio relativo
 fichero = open(os.path.join(wd,rd), "w")  
-
 
 ini = time.time()
 for w in range(t):

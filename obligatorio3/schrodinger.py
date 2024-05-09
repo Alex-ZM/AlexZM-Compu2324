@@ -1,6 +1,7 @@
-    ################################################
-    ### RESOLUCIÓN DE LA ECUACIÓN DE SCHRÖDINGER ###
-    ################################################
+   
+    ##################################################
+    ###  RESOLUCIÓN DE LA ECUACIÓN DE SCHRÖDINGER  ###
+    ##################################################
 
 import numpy as np
 import time
@@ -8,7 +9,7 @@ import os
 
 ###################################################################################################################
 
-# DEFINICIÓN DE PARÁMETROS (Parámetros test: N=200, lmbd=0.5, tiempo = 500)
+# DEFINICIÓN DE PARÁMETROS
 N = 200
 nCiclos = int(N/4)
 lmbd = 10

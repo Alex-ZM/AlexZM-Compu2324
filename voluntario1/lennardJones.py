@@ -1,6 +1,7 @@
-    #####################################################################################
-    ### SIMULACIÓN CON DINÁMICA MOLECULAR DE UN GAS CON UN POTENCIAL DE LENNARD-JONES ###
-    #####################################################################################
+
+    #######################################################################################
+    ###  SIMULACIÓN CON DINÁMICA MOLECULAR DE UN GAS CON UN POTENCIAL DE LENNARD-JONES  ###
+    #######################################################################################
 
 import numpy as np
 import random
@@ -68,7 +69,6 @@ for i in range(nParticulas):
     r[i,1] += (2*random.random()-1)*margen  # Desplaza aleatoriamente en la componente Y (+-margen)
 
 # CONDICIONES DE CONTORNO PERIÓDICO - RECOLOCACIÓN DE PARTÍCULAS 
-#@jit(nopython=True,fastmath=True)
 def bordes(v,p):
     evX = v[p,0]
     evY = v[p,1]
@@ -83,7 +83,6 @@ def bordes(v,p):
     return np.array([evX,evY])
 
 # CONDICIONES DE CONTORNO PERIÓDICO - DISTANCIA MÍNIMA ENTRE DOS PARTÍCULAS 
-#@jit(nopython=True,fastmath=True)
 def distanciaToroide(vector,p,j,L):
     distX = vector[p,0]-vector[j,0]
     distY = vector[p,1]-vector[j,1]
@@ -123,11 +122,8 @@ def evVelocidad(w,evA):
         evV[p] = w[p]+hMedios*evA[p]
     return evV
 
-
 ###################################################################################################################
 
-# Ahora solo queda programar el bucle y guardar los resultados de cada iteración en el
-# formato correcto y dentro de un fichero, para poder representarlos luego.
 wd = os.path.dirname(__file__)  # Directorio de trabajo
 datosPath = os.path.join(wd,"posParticulas.dat")  
 TPath = os.path.join(wd,"energiaCinetica.dat")
