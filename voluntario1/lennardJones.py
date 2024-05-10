@@ -4,6 +4,7 @@
     #####################################################################################
 
 import numpy as np
+import matplotlib.pyplot as plt
 import random
 import time
 import os
@@ -13,16 +14,16 @@ from numba import jit
 
 # Definimos algunas constantes
 h = 0.002    
-nIteraciones = 15000     
+nIteraciones = 50000     
 nParticulas = 20
 L = 10
 lMedios = L/2
 margen = 0.5
 skip = 10
 
-eCinetica = np.zeros(int(nIteraciones/skip-1))
-ePotencial = np.zeros(int(nIteraciones/skip-1))
-eTotal = np.zeros(int(nIteraciones/skip-1))
+eCinetica = []
+ePotencial = []
+eTotal = []
 
 # CONDICIONES DE CONTORNO PERIÓDICO - DISTANCIA MÍNIMA ENTRE DOS PARTÍCULAS 
 def distanciaToroideGlobal(vector,t,p,j,L,lMedios):
@@ -161,17 +162,9 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen):
 
 ###################################################################################################################
 
-# Ahora solo queda programar el bucle y guardar los resultados de cada iteración en el
-# formato correcto y dentro de un fichero, para poder representarlos luego.
 wd = os.path.dirname(__file__)  # Directorio de trabajo
 datosPath = os.path.join(wd,"posParticulas.dat")  
-TPath = os.path.join(wd,"energiaCinetica.dat")
-VPath = os.path.join(wd,"energiaPotencial.dat")
-EtotPath = os.path.join(wd,"energiaTotal.dat")
 ficheroPlot = open(datosPath, "w")
-ficheroT = open(TPath, "w")
-ficheroV = open(VPath, "w")
-ficheroEtot = open(EtotPath, "w")
 
 # CÁLCULO DE POSICIONES, VELOCIDADES Y PERÍODOS MEDIANTE LA FUNCIÓN "verlet()"
 tEjecIni = time.time()
@@ -198,12 +191,18 @@ for t in range(int(nIteraciones/skip-1)):
         sumaV += 2*ePotencialAux
 
     # ESCRITURA EN FICHERO
-    ficheroT.write(str(sumaT)+"\n")
-    ficheroV.write(str(sumaV)+"\n")
-    ficheroEtot.write(str(sumaT+sumaV)+"\n")
+    eCinetica.append(sumaT)
+    ePotencial.append(sumaV)
+    eTotal.append(sumaT+sumaV)
     for p in range(nParticulas):
         ficheroPlot.write(str(r[t,p,0]) + ", " + str(r[t,p,1]) + "\n")
     ficheroPlot.write("\n") 
+
+plt.plot(eCinetica, label= "T")
+plt.plot(ePotencial, label="V")
+plt.plot(eTotal, label="E = T+V")
+plt.legend()
+plt.show()
 
 # Por último, escribimos algunos datos de interés al final del fichero
 ficheroPlot.write("# Se han realizado "+str(nIteraciones)+" iteraciones con h = "+str(h)+" y skip "+str(skip)+"\n")
