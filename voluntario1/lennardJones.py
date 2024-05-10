@@ -1,7 +1,7 @@
 
-    #######################################################################################
-    ###  SIMULACIÓN CON DINÁMICA MOLECULAR DE UN GAS CON UN POTENCIAL DE LENNARD-JONES  ###
-    #######################################################################################
+    #####################################################################################
+    ### SIMULACIÓN CON DINÁMICA MOLECULAR DE UN GAS CON UN POTENCIAL DE LENNARD-JONES ###
+    #####################################################################################
 
 import numpy as np
 import random
@@ -12,9 +12,9 @@ from numba import jit
 ###################################################################################################################
 
 # Definimos algunas constantes
-h = 0.001    
-nIter = 10000     
-nParticulas = 40
+h = 0.002    
+nIter = 3000     
+nParticulas = 20
 tEjecIni = time.time()
 L = 10
 margen = 0.5
@@ -69,7 +69,8 @@ for i in range(nParticulas):
     r[i,1] += (2*random.random()-1)*margen  # Desplaza aleatoriamente en la componente Y (+-margen)
 
 # CONDICIONES DE CONTORNO PERIÓDICO - RECOLOCACIÓN DE PARTÍCULAS 
-def bordes(v,p):
+@jit(nopython=True,fastmath=True)
+def bordes(v,p,L):
     evX = v[p,0]
     evY = v[p,1]
     if evX > L:
@@ -83,7 +84,7 @@ def bordes(v,p):
     return np.array([evX,evY])
 
 # CONDICIONES DE CONTORNO PERIÓDICO - DISTANCIA MÍNIMA ENTRE DOS PARTÍCULAS 
-def distanciaToroide(vector,p,j,L):
+def distanciaToroide(vector,p,j,L,lMedios):
     distX = vector[p,0]-vector[j,0]
     distY = vector[p,1]-vector[j,1]
     if np.abs(distX) > lMedios:
@@ -93,16 +94,18 @@ def distanciaToroide(vector,p,j,L):
     return np.array([distX,distY])
 
 # VERLET - ACELERACIÓN (t)
-def aceleracion(r):
+@jit(nopython=True,fastmath=True)
+def aceleracion(r,nParticulas,L,lMedios):
     for p in range(nParticulas):
         aux1 = np.array([0.0,0.0])
+        auxa = r
         for j in range(nParticulas):
             if p != j:
-                R = distanciaToroide(r,p,j,L)
+                R = distanciaToroide(r,p,j,L,lMedios)
                 normaR = np.linalg.norm(R)
                 aux1 = aux1 + (48/normaR**13 - 24/normaR**7)*R/normaR
-        a[p] = aux1
-    return a
+        auxa[p] = aux1
+    return auxa
 
 # VERLET - W
 def uvedoble(w,v,a):
@@ -122,15 +125,20 @@ def evVelocidad(w,evA):
         evV[p] = w[p]+hMedios*evA[p]
     return evV
 
+
 ###################################################################################################################
 
+# Ahora solo queda programar el bucle y guardar los resultados de cada iteración en el
+# formato correcto y dentro de un fichero, para poder representarlos luego.
 wd = os.path.dirname(__file__)  # Directorio de trabajo
 datosPath = os.path.join(wd,"posParticulas.dat")  
 TPath = os.path.join(wd,"energiaCinetica.dat")
 VPath = os.path.join(wd,"energiaPotencial.dat")
+EtotPath = os.path.join(wd,"energiaTotal.dat")
 ficheroPlot = open(datosPath, "w")
 ficheroT = open(TPath, "w")
 ficheroV = open(VPath, "w")
+ficheroEtot = open(EtotPath, "w")
 
 # BUCLE - ALGORITMO DE VERLET
 for t in range(nIter):
@@ -144,28 +152,44 @@ for t in range(nIter):
         ficheroPlot.write("\n") 
 
     for j in range(nParticulas):
-            r[j] = bordes(r,j) 
+            r[j] = bordes(r,j,L) 
 
-    a = aceleracion(r)
+    a = aceleracion(r,nParticulas,L,lMedios)
     w = uvedoble(w,v,a)
     evR = evPosicion(evR,r,w)
     for j in range(nParticulas):
-            evR[j] = bordes(evR,j) 
-    evA = aceleracion(evR)
+            evR[j] = bordes(evR,j,L) 
+    evA = aceleracion(evR,nParticulas,L,lMedios)
     evV = evVelocidad(w,evA)
 
-    for p in range(nParticulas):  # EVOLUCIÓN TEMPORAL + CÁLCULO ENERGÍAS
-        
+
+    # EVOLUCIÓN TEMPORAL
+    for p in range(nParticulas):
         r[p] = evR[p]
         v[p] = evV[p]
-        #T[p] = 0.5*np.linalg.norm(v[p])**2
-        #V[p] = 0
-    
-        #for j in range(nParticulas):
-        #    if p != j:
-        #        R = np.linalg.norm(distanciaToroide(r,p,j))
-        #        V[p] += (R**(-12)-R**(-6))
-        #V[p] = 4*V[p]
+
+    # CÁLCULO DE ENERGÍAS
+    if t%skip == 0:
+        sumaT = 0
+        sumaV = 0
+        for p in range(nParticulas):
+
+            # ENERGÍA CINÉTICA
+            T[p] = 0.5*np.linalg.norm(v[p])**2
+            sumaT += T[p]
+            
+            # ENERGÍA POTENCIAL
+            V[p] = 0
+            for j in range(nParticulas):
+                if p != j:
+                    R = np.linalg.norm(distanciaToroide(r,p,j,L,lMedios))
+                    V[p] += (R**(-12)-R**(-6))
+            V[p] = 2*V[p]
+            sumaV += V[p]
+
+        ficheroT.write(str(sumaT)+"\n")
+        ficheroV.write(str(sumaV)+"\n")
+        ficheroEtot.write(str(sumaT+sumaV)+"\n")
         
 ###################################################################################################################
 
