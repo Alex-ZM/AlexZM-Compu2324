@@ -1,29 +1,32 @@
-# Simulación del sistema solar
+
+    ############################################################
+    ###  ALGORITMO DE VERLET - SIMULACIÓN DEL SISTEMA SOLAR  ###
+    ############################################################
+
 import numpy as np
+import matplotlib.pyplot as plt
+import random
 import time
 import os
+from numba import jit
 
+###################################################################################################################
 
-# Definimos algunas constantes (Sistema Internacional - reescalado)
-masaSolar = 1.98855*10**30  # Masa del Sol
-UA = 1.496*10**11  # Distancia Tierra-Sol
-G = 6.67*10**(-11)  # Cte de Gravitación Universal
-h = 0.0001          # <---------- Paso temporal, inverso a la precisión (CAMBIAR)
-nIter = 1000000     # <---------- Número de iteraciones (CAMBIAR)
-skip = 500          # <---------- Cada cuántas iteraciones guarda datos en los ficheros (CAMBIAR)
-guardarVelocidades = False  # <--- Elije si guardar también las velocidades (CAMBIAR)
-t = 0
-nPlanetas = 8
-tEjecIni = time.time()
+# Definimos algunas constantes
+masaSolar = 1.98855*10**30 
+UA = 1.496*10**11  
+G = 6.67*10**(-11)  
+h = 0.0001          
+nIteraciones = 1000000    
+skip = 400         
+relativoATierra = False  # Solo funciona si nPlanetas>=3
+nPlanetas = 5
 
 hMedios = h/2
-
 
 def reescalarV(v):  # Función para reescalar t
     return v*np.sqrt(UA/(G*masaSolar))
 
-
-# Definimos (y reescalamos) los parámetros iniciales de los planetas
 m = np.array(
     [[1],                       
     [330.2*10**21/masaSolar],  
@@ -34,21 +37,6 @@ m = np.array(
     [0.568*10**27/masaSolar],  
     [0.087*10**27/masaSolar],  
     [0.102*10**27/masaSolar], 
-    [12.5*10**21/masaSolar],
-    [12.5*10**21/masaSolar],
-    [12.5*10**21/masaSolar],
-    [12.5*10**21/masaSolar],
-    [12.5*10**21/masaSolar],
-    [12.5*10**21/masaSolar],
-    [12.5*10**21/masaSolar],
-    [12.5*10**21/masaSolar],
-    [12.5*10**21/masaSolar],
-    [12.5*10**21/masaSolar],
-    [12.5*10**21/masaSolar],
-    [12.5*10**21/masaSolar],
-    [12.5*10**21/masaSolar],
-    [12.5*10**21/masaSolar],
-    [12.5*10**21/masaSolar],
     [12.5*10**21/masaSolar]])  
 
 r = np.array(
@@ -61,23 +49,7 @@ r = np.array(
     [1433.5*10**9/UA,10**-15], 
     [2872.5*10**9/UA,10**-15], 
     [4495.1*10**9/UA,10**-15], 
-    [5870*10**9/UA,10**-15],
-    [(5870*10**9+(5870-4491)*10**9)/UA,10**-15],
-    [(5870*10**9+2*(5870-4491)*10**9)/UA,10**-15],
-    [(5870*10**9+3*(5870-4491)*10**9)/UA,10**-15],
-    [(5870*10**9+4*(5870-4491)*10**9)/UA,10**-15],
-    [(5870*10**9+5*(5870-4491)*10**9)/UA,10**-15],
-    [(5870*10**9+6*(5870-4491)*10**9)/UA,10**-15],
-    [(5870*10**9+7*(5870-4491)*10**9)/UA,10**-15],
-    [(5870*10**9+8*(5870-4491)*10**9)/UA,10**-15],
-    [(5870*10**9+9*(5870-4491)*10**9)/UA,10**-15],
-    [(5870*10**9+10*(5870-4491)*10**9)/UA,10**-15],
-    [(5870*10**9+11*(5870-4491)*10**9)/UA,10**-15],
-    [(5870*10**9+12*(5870-4491)*10**9)/UA,10**-15],
-    [(5870*10**9+13*(5870-4491)*10**9)/UA,10**-15],
-    [(5870*10**9+14*(5870-4491)*10**9)/UA,10**-15],
-    [(5870*10**9+15*(5870-4491)*10**9)/UA,10**-15],
-    [(5870*10**9+16*(5870-4491)*10**9)/UA,10**-15]])   
+    [5870*10**9/UA,10**-15]])   
 
 v = np.array(
     [[0,0],               
@@ -89,124 +61,170 @@ v = np.array(
     [0,reescalarV(9700)], 
     [0,reescalarV(6800)], 
     [0,reescalarV(5400)], 
-    [0,reescalarV(4700)],
-    [0,reescalarV(4700)],
-    [0,reescalarV(4700)],
-    [0,reescalarV(4700)],
-    [0,reescalarV(4700)],
-    [0,reescalarV(4700)],
-    [0,reescalarV(4700)],
-    [0,reescalarV(4700)],
-    [0,reescalarV(4700)],
-    [0,reescalarV(4700)],
-    [0,reescalarV(4700)],
-    [0,reescalarV(4700)],
-    [0,reescalarV(4700)],
-    [0,reescalarV(4700)],
-    [0,reescalarV(4700)],
     [0,reescalarV(4700)]])
 
-T = np.array(
-    [[1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1],
-    [1]])
+eCinetica = np.zeros((nPlanetas,int(nIteraciones/skip-1)))
+ePotencial = np.zeros((nPlanetas,int(nIteraciones/skip-1)))
+eTotal = np.zeros(int(nIteraciones/skip-1))
 
+###################################################################################################################
 
-def a(i):  # Valor de la aceleración del planeta i en el instante actual
-    aFinal = np.array([0.0,0.0])
-    for j in range(0, nPlanetas):
-        if i != j:
-            R = np.subtract(r[i], r[j])
-            aFinal = aFinal - (m[j]*R)/(np.linalg.norm(R))**3
-    return aFinal
+# DEFINICIÓN DE FUNCIÓN - ALGORITMO DE VERLET
+@jit(nopython=True,fastmath=True)
+def verlet(m,r,v,nIteraciones,nPlanetas,skip):
 
+    T = np.ones(10)
+    posiciones = np.zeros((int(nIteraciones/skip),nPlanetas,2))
+    velocidades = np.zeros((int(nIteraciones/skip),nPlanetas,2))
+    a = np.zeros((nPlanetas,2))
+    w = np.zeros((nPlanetas,2))
+    evR = np.zeros((nPlanetas,2))
+    evV = np.zeros((nPlanetas,2))
+    evA = np.zeros((nPlanetas,2))
 
-def w(i):  #Valor de w del planeta i
-    return (v[i] + (hMedios)*a(i))
+    hMedios = h/2
+    
+    for t in range(nIteraciones):
 
+        # GUARDA LOS RESULTADOS EN LOS VECTORES "posiciones" Y "velocidades"
+        if t%skip == 0:
+            for p in range(nPlanetas):
+                posiciones[int(t/skip),p] = r[p]
+                velocidades[int(t/skip),p] = r[p]
 
-def evR(i):  # Evolución temporal de la posición del planeta i
-    return (r[i] + h*w(i))
+        # CÁLCULOS DEL ALGORITMO DE VERLET
+        for p in range(nPlanetas):
+            aux1 = np.array([0.0,0.0])
+            for j in range(nPlanetas):
+                if p != j:
+                    R = np.subtract(r[p],r[j])
+                    aux1 = aux1 - (m[j]*R)/(np.linalg.norm(R))**3
+            a[p] = aux1
 
+        for p in range(nPlanetas):
+            w[p] = v[p] + hMedios*a[p]
 
-def evA(i):  # Evolución temporal de la aceleración del planeta i
-    aFinal = np.array([0.0,0.0])
-    for j in range(0,nPlanetas):
-        if i != j:
-            R = np.subtract(evR(i), evR(j))
-            aFinal = aFinal - (m[j]*R)/(np.linalg.norm(R))**3
-    return aFinal
+        for p in range(nPlanetas):
+            evR[p] = r[p] + h*w[p]
 
+        for p in range(nPlanetas):
+            aux2 = np.array([0.0,0.0])
+            for j in range(nPlanetas):
+                if p != j:
+                    R = np.subtract(evR[p],evR[j])
+                    aux2 = aux2 - (m[j]*R)/(np.linalg.norm(R))**3
+            evA[p] = aux2
 
-def evV(i):  # Evolución temporal de la velocidad del planeta i
-    return (w(i) + (hMedios)*evA(i))
+        for p in range(nPlanetas):
+            evV[p] = w[p] + hMedios*evA[p]
 
+        # EVOLUCIÓN TEMPORAL
+        for p in range(nPlanetas):
+            r[p] = evR[p]
+            v[p] = evV[p]
 
-# Ahora solo queda programar el bucle y guardar los resultados de cada iteración en el
-# formato correcto y dentro de un fichero, para poder representarlos luego.
-wd = os.path.dirname(__file__)      # Directorio de trabajo
-planetasPath = os.path.join(wd,"planets_data.dat") # Nombre del fichero de datos
-posicionesPath = os.path.join(wd,"posiciones_data") # Nombre del fichero de datos
-velocidadesPath = os.path.join(wd,"velocidades") # Nombre del fichero de datos
-ficheroPlot = open(planetasPath, "w")
-if guardarVelocidades:
-    ficheroPosiciones = open(posicionesPath, "w")
-    ficheroVelocidades = open(velocidadesPath, "w")
-for j in range(nIter):
+        for i in range(1,nPlanetas):
+            if T[i]==1 and r[i][1]<0:
+                T[i] = 2*t  # Guarda el período de cada planeta
 
-    if j%skip==0:  # Guardamos la posición de los planetas cada "skip" iteraciones
+    return posiciones,velocidades,T
 
-        if guardarVelocidades:  # Si lo elegimos, guardamos las velocidades en un fichero
-            for i in range(0, nPlanetas):
-                ficheroVelocidades.write(str(v[i][0]) + " " + str(v[i][1]) + "\n")  # Calcula e introduce las velocidades de los planetas en el fichero
-                ficheroPosiciones.write(str(r[i][0]) + " " + str(r[i][1]) + "\n")  # Calcula e introduce las posiciones de los planetas en el fichero
-                
-        for i in range(0, nPlanetas):
-            ficheroPlot.write(str(r[i][0]) + ", " + str(r[i][1]) + "\n")  # Calcula e introduce las posiciones de los planetas en el fichero
-        ficheroPlot.write("\n")  # Para separar los grupos de datos por instante temporal
+###################################################################################################################
+###################################################################################################################
 
-    for i in range(1,nPlanetas):
-        if T[i]==1 and r[i][1]<0:
-            T[i] = 2*t  # Guarda el período de cada planeta
+wd = os.path.dirname(__file__)  # Directorio de trabajo
+datosPath = os.path.join(wd,"posPlanetas.dat")  
+ficheroPlot = open(datosPath, "w")
 
-        r[i] = evR(i)  # 
-        v[i] = evV(i)  # Avance temporal: t = t+h
-    t = t + h          #
-
-# Por último, escribimos algunos datos de interés al final del fichero
-ficheroPlot.write("# Se han realizado "+str(nIter)+" iteraciones con h = "+str(h)+" y skip "+str(skip)+"\n")
-#ficheroPlot.write("# T(1) = "+str(T[1]/T[3]*365.256)+" días terrestres (vs. 87.969)\n")
-#ficheroPlot.write("# T(2) = "+str(T[2]/T[3]*365.256)+" días terrestres (vs. 224.699)\n")
-#ficheroPlot.write("# T(3) = "+str(T[3]/T[3]*365.256)+" días terrestres (vs. 365.256)\n")
-#ficheroPlot.write("# T(4) = "+str(T[4]/T[3]*365.256)+" días terrestres (vs. 686.979)\n")
-#ficheroPlot.write("# T(5) = "+str(T[5]/T[3]*365.256)+" días terrestres (vs. 4332.589)\n")
-#ficheroPlot.write("# T(6) = "+str(T[6]/T[3]*365.256)+" días terrestres (vs. 10759.23)\n")
-
+# CÁLCULO DE POSICIONES, VELOCIDADES Y PERÍODOS MEDIANTE LA FUNCIÓN "verlet()"
+tEjecIni = time.time()
+r,v,T = verlet(m,r,v,nIteraciones,nPlanetas,skip)
 tEjecFin = time.time()
-ficheroPlot.write("# Tiempo de ejecución: "+str(tEjecFin-tEjecIni))
 
-if guardarVelocidades:
-    ficheroPosiciones.close()
-    ficheroVelocidades.close()
+###################################################################################################################
+
+if relativoATierra == True:
+    tFicherosIni = time.time()
+    for t in range(int(nIteraciones/skip-1)):
+
+        # ESCRITURA EN FICHERO
+        for p in range(nPlanetas):
+            ficheroPlot.write(str(np.subtract(r[t,p,0],r[t,3,0])) + ", " + str(np.subtract(r[t,p,1],r[t,3,1])) + "\n")
+        ficheroPlot.write("\n") 
+
+    tFicherosFin = time.time()
+
+###################################################################################################################
+
+else:
+    # ESCRITURA DE DATOS EN EL FICHERO
+    tFicherosIni = time.time()
+    for t in range(int(nIteraciones/skip-1)):
+
+        # CÁLCULO ENERGÍAS
+        for p in range(nPlanetas):  
+
+            eCinetica[p,t] = 0.5*np.linalg.norm(v[p])**2
+
+            ePotencialAux = 0
+            for j in range(nPlanetas):
+                if p != j:
+                    R = np.subtract(r[p],r[j])
+                    ePotencialAux = ePotencialAux - (m[p]*m[j])/np.linalg.norm(R)
+            ePotencial[p,t] = 4*ePotencialAux
+
+            eTotal[t] += ePotencial[p,t]+eCinetica[p,t]
+
+        # ESCRITURA EN FICHERO
+        for p in range(nPlanetas):
+            ficheroPlot.write(str(r[t,p,0]) + ", " + str(r[t,p,1]) + "\n")
+        ficheroPlot.write("\n") 
+
+    tFicherosFin = time.time()
+
+    # PLOT DE LAS ENERGÍAS
+    plt.plot(eCinetica[1], label= "Mercurio - T")
+    plt.plot(ePotencial[1], label="Mercurio - V")
+    if nPlanetas > 2:
+        plt.plot(eCinetica[2], label= "Venus - T")
+        plt.plot(ePotencial[2], label="Venus - V")
+    if nPlanetas > 3:
+        plt.plot(eCinetica[3], label= "Tierra - T")
+        plt.plot(ePotencial[3], label="Tierra - V")
+    if nPlanetas > 4:
+        plt.plot(eCinetica[4], label= "Marte - T")
+        plt.plot(ePotencial[4], label="Marte - V")
+    if nPlanetas > 5:
+        plt.plot(eCinetica[5], label= "Júpiter - T")
+        plt.plot(ePotencial[5], label="Júpiter - V")
+    if nPlanetas > 6:
+        plt.plot(eCinetica[6], label= "Saturno - T")
+        plt.plot(ePotencial[6], label="Saturno - V")
+    if nPlanetas > 7:
+        plt.plot(eCinetica[7], label= "Urano - T")
+        plt.plot(ePotencial[7], label="Urano - V")
+    if nPlanetas > 8:
+        plt.plot(eCinetica[8], label= "Neptuno - T")
+        plt.plot(ePotencial[8], label="Neptuno - V")
+    if nPlanetas > 9:
+        plt.plot(eCinetica[9], label= "Plutón - T")
+        plt.plot(ePotencial[9], label="Plutón - V")
+    plt.plot(eTotal, label="E")
+    plt.legend()
+    plt.show()
+
+    # Por último, se escriben algunos datos de interés al final del fichero
+    ficheroPlot.write("# Se han realizado "+str(nIteraciones)+" iteraciones con h = "+str(h)+" y skip "+str(skip)+"\n"+"#"+"\n")
+    ficheroPlot.write("# Tiempo de ejecucion - ALGORITMO DE VERLET .............. "+str(tEjecFin-tEjecIni)+"\n")
+    ficheroPlot.write("# Tiempo de ejecucion - ESCRITURA DE DATOS EN FICHEROS ... "+str(tFicherosFin-tFicherosIni)+"\n"+"#"+"\n")
+    ficheroPlot.write("# T(1) = "+str(T[1]/T[3]*365.256)+" dias terrestres (vs. 87.969)\n")
+    ficheroPlot.write("# T(2) = "+str(T[2]/T[3]*365.256)+" dias terrestres (vs. 224.699)\n")
+    ficheroPlot.write("# T(3) = "+str(T[3]/T[3]*365.256)+" dias terrestres (vs. 365.256)\n")
+    ficheroPlot.write("# T(4) = "+str(T[4]/T[3]*365.256)+" dias terrestres (vs. 686.979)\n")
+    ficheroPlot.write("# T(5) = "+str(T[5]/T[3]*365.256)+" dias terrestres (vs. 4332.589)\n")
+    ficheroPlot.write("# T(6) = "+str(T[6]/T[3]*365.256)+" dias terrestres (vs. 10759.23)\n")
+    ficheroPlot.write("# T(7) = "+str(T[6]/T[3]*365.256)+" dias terrestres (vs. 30687)\n")
+    ficheroPlot.write("# T(8) = "+str(T[6]/T[3]*365.256)+" dias terrestres (vs. 60190)\n")
+    ficheroPlot.write("# T(9) = "+str(T[6]/T[3]*365.256)+" dias terrestres (vs. 90798)\n"+"#"+"\n")
+
+ficheroPlot.close()

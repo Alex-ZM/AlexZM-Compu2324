@@ -49,27 +49,27 @@ import os
 # Parámetros
 # ========================================
 wd = os.path.dirname(__file__)      # Directorio de trabajo
-rd = "planets_dataN.dat"               # Directorio relativo
+rd = "planetasInteriores.dat"               # Directorio relativo
 file_in = os.path.join(wd,rd) # Nombre del fichero de datos
 file_out = "planetas" # Nombre del fichero de salida (sin extensión)
 
 # Límites de los ejes X e Y
-x_min = -9
-x_max =  9
-y_min = -9
-y_max =  9
+x_min = -1.8
+x_max =  1.8
+y_min = -1.8
+y_max =  1.8
 
-interval = 50 # Tiempo entre fotogramas en milisegundos
+interval = 10 # Tiempo entre fotogramas en milisegundos
 show_trail = True # Muestra la "estela" del planeta
 trail_width = 1 # Ancho de la estela
-save_to_file = False # False: muestra la animación por pantalla,
+save_to_file = True # False: muestra la animación por pantalla,
                     # True: la guarda en un fichero
 dpi = 300 # Calidad del vídeo de salida (dots per inch)
 
 # Radio del planeta, en las mismas unidades que la posición
 # Puede ser un número (el radio de todos los planetas) o una lista con
 # el radio de cada uno
-planet_radius = 0.05
+planet_radius = 0.025
 #planet_radius = [0.5, 0.7, 1.1]
 
 
