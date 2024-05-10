@@ -90,7 +90,7 @@ def verlet(m,r,v,nIteraciones,nPlanetas,skip):
         if t%skip == 0:
             for p in range(nPlanetas):
                 posiciones[int(t/skip),p] = r[p]
-                velocidades[int(t/skip),p] = r[p]
+                velocidades[int(t/skip),p] = v[p]
 
         # CÁLCULOS DEL ALGORITMO DE VERLET
         for p in range(nPlanetas):

@@ -13,118 +13,151 @@ from numba import jit
 
 # Definimos algunas constantes
 h = 0.002    
-nIter = 3000     
+nIteraciones = 15000     
 nParticulas = 20
-tEjecIni = time.time()
 L = 10
+lMedios = L/2
 margen = 0.5
 skip = 10
-hMedios = h/2
-lMedios = L/2
 
-# Definimos (y reescalamos) los parámetros iniciales de las partículas
-m = np.full(nParticulas,1).astype(np.int8)
-r = np.zeros((nParticulas,2))
-v = np.zeros((nParticulas,2))
-a = np.zeros((nParticulas,2))
-w = np.zeros((nParticulas,2))
-evR = np.zeros((nParticulas,2))
-evV = np.zeros((nParticulas,2))
-evA = np.zeros((nParticulas,2))
-T = np.zeros((nParticulas,1))
-V = np.zeros((nParticulas,1))
-
-###################################################################################################################
-
-# CONDICIONES INICIALES - POSICIONES EQUIESPACIADAS EN CUADRÍCULA
-particulasPorFila = int(np.floor(np.sqrt(nParticulas)))
-separacionInicialH = L/particulasPorFila
-if nParticulas > particulasPorFila**2:
-    separacionInicialV = L/(particulasPorFila+1)
-else: separacionInicialV = separacionInicialH
-
-for f in range(particulasPorFila):
-    for i in range(particulasPorFila):  
-        r[f*particulasPorFila+i,1] = i*separacionInicialH  # Equiespaciado horizontal
-particulasUltimaFila = nParticulas-particulasPorFila**2
-if particulasUltimaFila != 0:
-    for i in range(particulasUltimaFila):
-        r[particulasPorFila**2+i,1] = i*separacionInicialH  # Equiespaciado horizontal (última fila)
-
-for c in range(particulasPorFila):
-    for i in range(particulasPorFila):
-        r[c*particulasPorFila+i,0] = c*separacionInicialV  # Equiespaciado vertical
-if particulasUltimaFila != 0:
-    for i in range(particulasUltimaFila):
-        r[particulasPorFila**2+i,0] = particulasPorFila*separacionInicialV  # Equiespaciado vertical (última fila)
-
-# CONDICIONES INICIALES - VELOCIDADES ALEATORIAS
-for i in range(nParticulas):
-    v[i,0] = 2*random.random()-1
-    v[i,1] = 1-np.abs(v[i,0])
-
-# CONDICIONES INICIALES - POSICIONES ALEATORIAS
-for i in range(nParticulas):
-    r[i,0] += (2*random.random()-1)*margen  # Desplaza aleatoriamente en la componente X (+-margen)
-    r[i,1] += (2*random.random()-1)*margen  # Desplaza aleatoriamente en la componente Y (+-margen)
-
-# CONDICIONES DE CONTORNO PERIÓDICO - RECOLOCACIÓN DE PARTÍCULAS 
-@jit(nopython=True,fastmath=True)
-def bordes(v,p,L):
-    evX = v[p,0]
-    evY = v[p,1]
-    if evX > L:
-        evX = evX%L
-    if evX < 0:
-        evX = evX%L
-    if evY > L:
-        evY = evY%L
-    if evY < 0:
-        evY = evY%L
-    return np.array([evX,evY])
+eCinetica = np.zeros(int(nIteraciones/skip-1))
+ePotencial = np.zeros(int(nIteraciones/skip-1))
+eTotal = np.zeros(int(nIteraciones/skip-1))
 
 # CONDICIONES DE CONTORNO PERIÓDICO - DISTANCIA MÍNIMA ENTRE DOS PARTÍCULAS 
-def distanciaToroide(vector,p,j,L,lMedios):
-    distX = vector[p,0]-vector[j,0]
-    distY = vector[p,1]-vector[j,1]
+def distanciaToroideGlobal(vector,t,p,j,L,lMedios):
+    distX = vector[t,p,0]-vector[t,j,0]
+    distY = vector[t,p,1]-vector[t,j,1]
     if np.abs(distX) > lMedios:
         distX = -(L-np.abs(distX))*(distX/np.abs(distX))
     if np.abs(distY) > lMedios:
         distY = -(L-np.abs(distY))*(distY/np.abs(distY))
     return np.array([distX,distY])
 
-# VERLET - ACELERACIÓN (t)
+
 @jit(nopython=True,fastmath=True)
-def aceleracion(r,nParticulas,L,lMedios):
-    for p in range(nParticulas):
-        aux1 = np.array([0.0,0.0])
-        auxa = r
+def verlet(h,nIteraciones,nParticulas,skip,L,margen):
+    # PARÁMETROS INICIALES DEL SISTEMA
+    r = np.zeros((nParticulas,2))
+    v = np.zeros((nParticulas,2))
+    a = np.zeros((nParticulas,2))
+    w = np.zeros((nParticulas,2))
+    evR = np.zeros((nParticulas,2))
+    evV = np.zeros((nParticulas,2))
+    evA = np.zeros((nParticulas,2))
+    posiciones = np.zeros((int(nIteraciones/skip),nParticulas,2))
+    velocidades = np.zeros((int(nIteraciones/skip),nParticulas,2))
+
+    hMedios = h/2
+    lMedios = L/2
+
+
+    # CONDICIONES INICIALES - POSICIONES EQUIESPACIADAS EN CUADRÍCULA
+    particulasPorFila = int(np.floor(np.sqrt(nParticulas)))
+    separacionInicialH = L/particulasPorFila
+    if nParticulas > particulasPorFila**2:
+        separacionInicialV = L/(particulasPorFila+1)
+    else: separacionInicialV = separacionInicialH
+
+    for f in range(particulasPorFila):
+        for i in range(particulasPorFila):  
+            r[f*particulasPorFila+i,1] = i*separacionInicialH  # Equiespaciado horizontal
+    particulasUltimaFila = nParticulas-particulasPorFila**2
+    if particulasUltimaFila != 0:
+        for i in range(particulasUltimaFila):
+            r[particulasPorFila**2+i,1] = i*separacionInicialH  # Equiespaciado horizontal (última fila)
+
+    for c in range(particulasPorFila):
+        for i in range(particulasPorFila):
+            r[c*particulasPorFila+i,0] = c*separacionInicialV  # Equiespaciado vertical
+    if particulasUltimaFila != 0:
+        for i in range(particulasUltimaFila):
+            r[particulasPorFila**2+i,0] = particulasPorFila*separacionInicialV  # Equiespaciado vertical (última fila)
+
+
+    # CONDICIONES INICIALES - VELOCIDADES ALEATORIAS
+    for i in range(nParticulas):
+        v[i,0] = 2*random.random()-1
+        v[i,1] = 1-np.abs(v[i,0])
+
+    # CONDICIONES INICIALES - POSICIONES ALEATORIAS
+    for i in range(nParticulas):
+        r[i,0] += (2*random.random()-1)*margen  # Desplaza aleatoriamente en la componente X (+-margen)
+        r[i,1] += (2*random.random()-1)*margen  # Desplaza aleatoriamente en la componente Y (+-margen)
+
+
+    # CONDICIONES DE CONTORNO PERIÓDICO - RECOLOCACIÓN DE PARTÍCULAS 
+    def bordes(v,p,L):
+        evX = v[p,0]
+        evY = v[p,1]
+        if evX > L:
+            evX = evX%L
+        if evX < 0:
+            evX = evX%L
+        if evY > L:
+            evY = evY%L
+        if evY < 0:
+            evY = evY%L
+        return np.array([evX,evY])
+
+    # CONDICIONES DE CONTORNO PERIÓDICO - DISTANCIA MÍNIMA ENTRE DOS PARTÍCULAS 
+    def distanciaToroide(vector,p,j,L,lMedios):
+        distX = vector[p,0]-vector[j,0]
+        distY = vector[p,1]-vector[j,1]
+        if np.abs(distX) > lMedios:
+            distX = -(L-np.abs(distX))*(distX/np.abs(distX))
+        if np.abs(distY) > lMedios:
+            distY = -(L-np.abs(distY))*(distY/np.abs(distY))
+        return np.array([distX,distY])
+
+
+    for t in range(nIteraciones):
+
+        if t%skip == 0:
+            for p in range(nParticulas):
+                posiciones[int(t/skip),p] = r[p]
+                velocidades[int(t/skip),p] = v[p]
+    
+
         for j in range(nParticulas):
-            if p != j:
-                R = distanciaToroide(r,p,j,L,lMedios)
-                normaR = np.linalg.norm(R)
-                aux1 = aux1 + (48/normaR**13 - 24/normaR**7)*R/normaR
-        auxa[p] = aux1
-    return auxa
+            r[j] = bordes(r,j,L)
 
-# VERLET - W
-def uvedoble(w,v,a):
-    for p in range(nParticulas):
-        w[p] = v[p]+hMedios*a[p]
-    return w
+        for p in range(nParticulas):
+            aux1 = np.array([0.0,0.0])
+            for j in range(nParticulas):
+                if p != j:
+                    R = distanciaToroide(r,p,j,L,lMedios)
+                    normaR = np.linalg.norm(R)
+                    aux1 = aux1 + (48/normaR**13 - 24/normaR**7)*R/normaR
+            a[p] = aux1
 
-# VERLET - POSICION (t+h)
-def evPosicion(evR,r,w):
-    for p in range(nParticulas):
-        evR[p] = r[p]+h*w[p]
-    return evR
+        for p in range(nParticulas):
+            w[p] = v[p]+hMedios*a[p]
 
-# VERLET - VELOCIDAD (t+h)
-def evVelocidad(w,evA):
-    for p in range(nParticulas):
-        evV[p] = w[p]+hMedios*evA[p]
-    return evV
+        for p in range(nParticulas):
+            evR[p] = r[p]+h*w[p]
 
+        for j in range(nParticulas):
+            evR[j] = bordes(evR,j,L) 
+
+        for p in range(nParticulas):
+            aux2 = np.array([0.0,0.0])
+            for j in range(nParticulas):
+                if p != j:
+                    R = distanciaToroide(evR,p,j,L,lMedios)
+                    normaR = np.linalg.norm(R)
+                    aux2 = aux2 + (48/normaR**13 - 24/normaR**7)*R/normaR
+            evA[p] = aux2
+
+        for p in range(nParticulas):
+            evV[p] = w[p]+hMedios*evA[p]
+
+        # EVOLUCIÓN TEMPORAL
+        for p in range(nParticulas):
+            r[p] = evR[p]
+            v[p] = evV[p]
+
+    return posiciones,velocidades
 
 ###################################################################################################################
 
@@ -140,60 +173,41 @@ ficheroT = open(TPath, "w")
 ficheroV = open(VPath, "w")
 ficheroEtot = open(EtotPath, "w")
 
-# BUCLE - ALGORITMO DE VERLET
-for t in range(nIter):
-
-    if t%skip==0:  # Guarda la posición de las partículas cada "skip" iteraciones
-        print(t)
-        for p in range(nParticulas):
-            ficheroPlot.write(str(r[p][0]) + ", " + str(r[p][1]) + "\n")  # Posiciones de las partículas -> Fichero
-            #ficheroT.write(str(T[p])+"\n")  # Energía cinética -> Fichero
-            #ficheroV.write(str(V[p])+"\n")  # Energía potencial -> Fichero
-        ficheroPlot.write("\n") 
-
-    for j in range(nParticulas):
-            r[j] = bordes(r,j,L) 
-
-    a = aceleracion(r,nParticulas,L,lMedios)
-    w = uvedoble(w,v,a)
-    evR = evPosicion(evR,r,w)
-    for j in range(nParticulas):
-            evR[j] = bordes(evR,j,L) 
-    evA = aceleracion(evR,nParticulas,L,lMedios)
-    evV = evVelocidad(w,evA)
+# CÁLCULO DE POSICIONES, VELOCIDADES Y PERÍODOS MEDIANTE LA FUNCIÓN "verlet()"
+tEjecIni = time.time()
+r,v = verlet(h,nIteraciones,nParticulas,skip,L,margen)
+tEjecFin = time.time()
 
 
-    # EVOLUCIÓN TEMPORAL
+# ESCRITURA DE DATOS EN EL FICHERO
+tFicherosIni = time.time()
+for t in range(int(nIteraciones/skip-1)):
+
+    # CÁLCULO ENERGÍAS
+    sumaT = 0
+    sumaV = 0
+    for p in range(nParticulas):  
+
+        sumaT += 0.5*np.linalg.norm(v[t,p])**2
+
+        ePotencialAux = 0
+        for j in range(nParticulas):
+            if p != j:
+                R = np.linalg.norm(distanciaToroideGlobal(r,t,p,j,L,lMedios))
+                ePotencialAux += (R**(-12)-R**(-6))
+        sumaV += 2*ePotencialAux
+
+    # ESCRITURA EN FICHERO
+    ficheroT.write(str(sumaT)+"\n")
+    ficheroV.write(str(sumaV)+"\n")
+    ficheroEtot.write(str(sumaT+sumaV)+"\n")
     for p in range(nParticulas):
-        r[p] = evR[p]
-        v[p] = evV[p]
-
-    # CÁLCULO DE ENERGÍAS
-    if t%skip == 0:
-        sumaT = 0
-        sumaV = 0
-        for p in range(nParticulas):
-
-            # ENERGÍA CINÉTICA
-            T[p] = 0.5*np.linalg.norm(v[p])**2
-            sumaT += T[p]
-            
-            # ENERGÍA POTENCIAL
-            V[p] = 0
-            for j in range(nParticulas):
-                if p != j:
-                    R = np.linalg.norm(distanciaToroide(r,p,j,L,lMedios))
-                    V[p] += (R**(-12)-R**(-6))
-            V[p] = 2*V[p]
-            sumaV += V[p]
-
-        ficheroT.write(str(sumaT)+"\n")
-        ficheroV.write(str(sumaV)+"\n")
-        ficheroEtot.write(str(sumaT+sumaV)+"\n")
-        
-###################################################################################################################
+        ficheroPlot.write(str(r[t,p,0]) + ", " + str(r[t,p,1]) + "\n")
+    ficheroPlot.write("\n") 
 
 # Por último, escribimos algunos datos de interés al final del fichero
-ficheroPlot.write("# Se han realizado "+str(nIter)+" iteraciones con h = "+str(h)+" y skip "+str(skip)+"\n")
+ficheroPlot.write("# Se han realizado "+str(nIteraciones)+" iteraciones con h = "+str(h)+" y skip "+str(skip)+"\n")
 tEjecFin = time.time()
 ficheroPlot.write("# Tiempo de ejecución: "+str(tEjecFin-tEjecIni))
+
+tFicherosFin = time.time()
