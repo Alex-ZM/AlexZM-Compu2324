@@ -54,10 +54,10 @@ file_in = os.path.join(wd,rd) # Nombre del fichero de datos
 file_out = "planetas" # Nombre del fichero de salida (sin extensión)
 
 # Límites de los ejes X e Y
-x_min = -14
-x_max =  14
-y_min = -14
-y_max =  14
+x_min = -18
+x_max =  18
+y_min = -18
+y_max =  18
 
 interval = 10 # Tiempo entre fotogramas en milisegundos
 show_trail = True # Muestra la "estela" del planeta

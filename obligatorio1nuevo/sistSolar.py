@@ -4,6 +4,7 @@
     ############################################################
 
 import numpy as np
+import matplotlib.pyplot as plt
 import random
 import time
 import os
@@ -16,10 +17,10 @@ masaSolar = 1.98855*10**30
 UA = 1.496*10**11  
 G = 6.67*10**(-11)  
 h = 0.0001          
-nIteraciones = 1000000    
-skip = 1000         
+nIteraciones = 2000000    
+skip = 400         
 guardarVelocidades = False  # <--- Elije si guardar también las velocidades (CAMBIAR)
-nPlanetas = 10
+nPlanetas = 5
 
 hMedios = h/2
 
@@ -62,6 +63,10 @@ v = np.array(
     [0,reescalarV(5400)], 
     [0,reescalarV(4700)]])
 
+eCinetica = np.zeros((nPlanetas,int(nIteraciones/skip-1)))
+ePotencial = np.zeros((nPlanetas,int(nIteraciones/skip-1)))
+eTotal = np.zeros(int(nIteraciones/skip-1))
+
 ###################################################################################################################
 
 # DEFINICIÓN DE FUNCIÓN - ALGORITMO DE VERLET
@@ -101,7 +106,7 @@ def verlet(m,r,v,nIteraciones,nPlanetas,skip):
 
         for p in range(nPlanetas):
             evR[p] = r[p] + h*w[p]
-        
+
         for p in range(nPlanetas):
             aux2 = np.array([0.0,0.0])
             for j in range(nPlanetas):
@@ -139,21 +144,56 @@ tEjecFin = time.time()
 tFicherosIni = time.time()
 for t in range(int(nIteraciones/skip-1)):
 
+    # CÁLCULO ENERGÍAS
+    for p in range(nPlanetas):  
+
+        eCinetica[p,t] = 0.5*np.linalg.norm(v[p])**2
+
+        ePotencialAux = 0
+        for j in range(nPlanetas):
+            if p != j:
+                R = np.subtract(r[p],r[j])
+                ePotencialAux = ePotencialAux - (m[p]*m[j])/np.linalg.norm(R)
+        ePotencial[p,t] = 4*ePotencialAux
+
+        eTotal[t] += ePotencial[p,t]+eCinetica[p,t]
+
+    # ESCRITURA EN FICHERO
     for p in range(nPlanetas):
         ficheroPlot.write(str(r[t,p,0]) + ", " + str(r[t,p,1]) + "\n")  # Posiciones de las partículas -> Fichero
     ficheroPlot.write("\n") 
 
-    #for p in range(nPlanetas):  # EVOLUCIÓN TEMPORAL + CÁLCULO ENERGÍAS
-
-        #T[p] = 0.5*np.linalg.norm(v[p])**2
-        #V[p] = 0
-    
-        #for j in range(nPlanetas):
-        #    if p != j:
-        #        R = np.linalg.norm(distanciaToroide(r,p,j))
-        #        V[p] += (R**(-12)-R**(-6))
-        #V[p] = 4*V[p]
 tFicherosFin = time.time()
+
+plt.plot(eCinetica[1], label= "Mercurio - T")
+plt.plot(ePotencial[1], label="Mercurio - V")
+if nPlanetas > 2:
+    plt.plot(eCinetica[2], label= "Venus - T")
+    plt.plot(ePotencial[2], label="Venus - V")
+if nPlanetas > 3:
+    plt.plot(eCinetica[3], label= "Tierra - T")
+    plt.plot(ePotencial[3], label="Tierra - V")
+if nPlanetas > 4:
+    plt.plot(eCinetica[4], label= "Marte - T")
+    plt.plot(ePotencial[4], label="Marte - V")
+if nPlanetas > 5:
+    plt.plot(eCinetica[5], label= "Júpiter - T")
+    plt.plot(ePotencial[5], label="Júpiter - V")
+if nPlanetas > 6:
+    plt.plot(eCinetica[6], label= "Saturno - T")
+    plt.plot(ePotencial[6], label="Saturno - V")
+if nPlanetas > 7:
+    plt.plot(eCinetica[7], label= "Urano - T")
+    plt.plot(ePotencial[7], label="Urano - V")
+if nPlanetas > 8:
+    plt.plot(eCinetica[8], label= "Neptuno - T")
+    plt.plot(ePotencial[8], label="Neptuno - V")
+if nPlanetas > 9:
+    plt.plot(eCinetica[9], label= "Plutón - T")
+    plt.plot(ePotencial[9], label="Plutón - V")
+plt.plot(eTotal, label="E")
+plt.legend()
+plt.show()
         
 ###################################################################################################################
 
@@ -166,6 +206,9 @@ ficheroPlot.write("# T(2) = "+str(T[2]/T[3]*365.256)+" dias terrestres (vs. 224.
 ficheroPlot.write("# T(3) = "+str(T[3]/T[3]*365.256)+" dias terrestres (vs. 365.256)\n")
 ficheroPlot.write("# T(4) = "+str(T[4]/T[3]*365.256)+" dias terrestres (vs. 686.979)\n")
 ficheroPlot.write("# T(5) = "+str(T[5]/T[3]*365.256)+" dias terrestres (vs. 4332.589)\n")
-ficheroPlot.write("# T(6) = "+str(T[6]/T[3]*365.256)+" dias terrestres (vs. 10759.23)\n"+"#"+"\n")
+ficheroPlot.write("# T(6) = "+str(T[6]/T[3]*365.256)+" dias terrestres (vs. 10759.23)\n")
+ficheroPlot.write("# T(7) = "+str(T[6]/T[3]*365.256)+" dias terrestres (vs. 30687)\n")
+ficheroPlot.write("# T(8) = "+str(T[6]/T[3]*365.256)+" dias terrestres (vs. 60190)\n")
+ficheroPlot.write("# T(9) = "+str(T[6]/T[3]*365.256)+" dias terrestres (vs. 90798)\n"+"#"+"\n")
 
 ficheroPlot.close()
