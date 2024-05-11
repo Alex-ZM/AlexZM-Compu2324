@@ -14,7 +14,7 @@ from numba import jit
 
 # Definimos algunas constantes
 h = 0.002    
-nIteraciones = 70000     # 50000
+nIteraciones = 70000     # 70000
 nParticulas = 20         # 20
 L = 10
 lMedios = L/2
@@ -209,25 +209,26 @@ for t in range(int(nIteraciones/skip-1)):
         ficheroPlot.write(str(r[t,p,0]) + ", " + str(r[t,p,1]) + "\n")
     ficheroPlot.write("\n") 
 
+promedioVelocidades = np.zeros(nParticulas)
+for t in range(int(nIteraciones/(2*skip)),int(nIteraciones/skip-1)):
+    for p in range(nParticulas):
+        promedioVelocidades[p] += np.linalg.norm(v[t,p])
+for p in range(nParticulas):
+    promedioVelocidades[p] = promedioVelocidades[p]/(nIteraciones/(2*skip))
+
 ax1 = plt.subplot(2,2,1)
 plt.hist(normaV[0])
-plt.title("Histograma de velocidades: t=0",fontsize=11)
-plt.xlabel("velocidad",fontsize=9)
+plt.title("Velocidades iniciales",fontsize=11)
+plt.xlabel("|v|",fontsize=9)
 plt.ylabel("Frecuencia",fontsize=9)
 
 ax2 = plt.subplot(2,2,2)
-plt.hist(normaV[int(nIteraciones/(2*skip))],bins=20)
-plt.title("Histograma de velocidades: t=t_f/2",fontsize=11)
-plt.xlabel("velocidad",fontsize=9)
+plt.hist(promedioVelocidades,bins=20)
+plt.title("Promedio de velocidades: t=t_f/2 a t=t_f",fontsize=11)
+plt.xlabel("|v|",fontsize=9)
 plt.ylabel("Frecuencia",fontsize=9)
 
-ax3 = plt.subplot(2,2,3)
-plt.hist(normaV[int(nIteraciones/(skip)-2)],bins=20)
-plt.title("Histograma de velocidades: t=t_f",fontsize=11)
-plt.xlabel("velocidad",fontsize=9)
-plt.ylabel("Frecuencia",fontsize=9)
-
-ax4 = plt.subplot(2,2,4)
+ax4 = plt.subplot(2,1,2)
 plt.plot(eCinetica, label= "T")
 plt.plot(ePotencial, label="V")
 plt.plot(eTotal, label="E = T+V")
