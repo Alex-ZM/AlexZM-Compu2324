@@ -14,8 +14,8 @@ from numba import jit
 
 # Definimos algunas constantes
 h = 0.002    
-nIteraciones = 50000     
-nParticulas = 20
+nIteraciones = 70000     # 50000
+nParticulas = 20         # 20
 L = 10
 lMedios = L/2
 margen = 0.5
@@ -24,6 +24,7 @@ skip = 10
 eCinetica = []
 ePotencial = []
 eTotal = []
+normaV = np.zeros((int(nIteraciones/skip),nParticulas),dtype=np.float32)
 
 # CONDICIONES DE CONTORNO PERIÓDICO - DISTANCIA MÍNIMA ENTRE DOS PARTÍCULAS 
 def distanciaToroideGlobal(vector,t,p,j,L,lMedios):
@@ -79,7 +80,7 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen):
     # CONDICIONES INICIALES - VELOCIDADES ALEATORIAS
     for i in range(nParticulas):
         v[i,0] = 2*random.random()-1
-        v[i,1] = 1-np.abs(v[i,0])
+        v[i,1] = np.sqrt(1-v[i,0]**2)
 
     # CONDICIONES INICIALES - POSICIONES ALEATORIAS
     for i in range(nParticulas):
@@ -111,15 +112,20 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen):
             distY = -(L-np.abs(distY))*(distY/np.abs(distY))
         return np.array([distX,distY])
 
+    for p in range(nParticulas):
+                posiciones[0,p] = r[p]
+                velocidades[0,p] = v[p]
 
-    for t in range(nIteraciones):
+    for t in range(1,nIteraciones):
 
+        # GUARDAR EN LOS VECTORES RESULTADO
         if t%skip == 0:
             for p in range(nParticulas):
                 posiciones[int(t/skip),p] = r[p]
                 velocidades[int(t/skip),p] = v[p]
     
 
+        # ALGORITMO DE VERLET + COMPROBACIÓN DE CONDICIONES DE CONTORNO
         for j in range(nParticulas):
             r[j] = bordes(r,j,L)
 
@@ -153,6 +159,7 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen):
         for p in range(nParticulas):
             evV[p] = w[p]+hMedios*evA[p]
 
+
         # EVOLUCIÓN TEMPORAL
         for p in range(nParticulas):
             r[p] = evR[p]
@@ -173,10 +180,12 @@ tEjecFin = time.time()
 
 
 # ESCRITURA DE DATOS EN EL FICHERO
+temperatura = 0
 tFicherosIni = time.time()
 for t in range(int(nIteraciones/skip-1)):
 
     # CÁLCULO ENERGÍAS
+    sumaVelocidades = 0
     sumaT = 0
     sumaV = 0
     for p in range(nParticulas):  
@@ -190,6 +199,8 @@ for t in range(int(nIteraciones/skip-1)):
                 ePotencialAux += (R**(-12)-R**(-6))
         sumaV += 2*ePotencialAux
 
+        normaV[t,p] = np.linalg.norm(v[t,p])
+
     # ESCRITURA EN FICHERO
     eCinetica.append(sumaT)
     ePotencial.append(sumaV)
@@ -198,15 +209,33 @@ for t in range(int(nIteraciones/skip-1)):
         ficheroPlot.write(str(r[t,p,0]) + ", " + str(r[t,p,1]) + "\n")
     ficheroPlot.write("\n") 
 
+ax1 = plt.subplot(2,2,1)
+plt.hist(normaV[0])
+plt.title("Histograma de velocidades: t=0")
+plt.xlabel("v")
+plt.ylabel("Frecuencia")
+ax2 = plt.subplot(2,2,2)
+plt.hist(normaV[int(nIteraciones/(2*skip))])
+plt.title("Histograma de velocidades: t=t_f/2")
+plt.xlabel("v")
+plt.ylabel("Frecuencia")
+ax3 = plt.subplot(2,2,3)
+plt.hist(normaV[int(nIteraciones/(skip)-2)])
+plt.title("Histograma de velocidades: t=t_f")
+plt.xlabel("v")
+plt.ylabel("Frecuencia")
+
+ax4 = plt.subplot(2,2,4)
 plt.plot(eCinetica, label= "T")
 plt.plot(ePotencial, label="V")
 plt.plot(eTotal, label="E = T+V")
 plt.legend()
+plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.4, hspace=0.4)
 plt.show()
 
 # Por último, escribimos algunos datos de interés al final del fichero
 ficheroPlot.write("# Se han realizado "+str(nIteraciones)+" iteraciones con h = "+str(h)+" y skip "+str(skip)+"\n")
 tEjecFin = time.time()
-ficheroPlot.write("# Tiempo de ejecución: "+str(tEjecFin-tEjecIni))
+ficheroPlot.write("# Tiempo de ejecución: "+str(tEjecFin-tEjecIni)+"\n")
 
 tFicherosFin = time.time()
