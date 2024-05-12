@@ -14,12 +14,15 @@ from numba import jit
 
 # Definimos algunas constantes
 h = 0.002    
+skip = 10
 nIteraciones = 70000     # 70000
 nParticulas = 20         # 20
 L = 10
 lMedios = L/2
-margen = 0.5
-skip = 10
+margen = 0.25
+
+moduloVelocidad = 1
+soloDesplHoriz = False
 
 eCinetica = []
 ePotencial = []
@@ -38,7 +41,7 @@ def distanciaToroideGlobal(vector,t,p,j,L,lMedios):
 
 
 @jit(nopython=True,fastmath=True)
-def verlet(h,nIteraciones,nParticulas,skip,L,margen):
+def verlet(h,nIteraciones,nParticulas,skip,L,margen,moduloVelocidad,soloDesplHoriz):
     # PARÁMETROS INICIALES DEL SISTEMA
     r = np.zeros((nParticulas,2))
     v = np.zeros((nParticulas,2))
@@ -78,9 +81,14 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen):
 
 
     # CONDICIONES INICIALES - VELOCIDADES ALEATORIAS
-    for i in range(nParticulas):
-        v[i,0] = 2*random.random()-1
-        v[i,1] = np.sqrt(1-v[i,0]**2)
+    if soloDesplHoriz == True:
+        for p in range(nParticulas):
+            v[p,0] = moduloVelocidad*random.random()
+            v[p,1] = 0
+    else:
+        for p in range(nParticulas):
+            v[p,0] = moduloVelocidad*(2*random.random()-1)
+            v[p,1] = np.random.choice(np.array([-1,1]))*np.sqrt(moduloVelocidad-v[p,0]**2)
 
     # CONDICIONES INICIALES - POSICIONES ALEATORIAS
     for i in range(nParticulas):
@@ -175,7 +183,7 @@ ficheroPlot = open(datosPath, "w")
 
 # CÁLCULO DE POSICIONES, VELOCIDADES Y PERÍODOS MEDIANTE LA FUNCIÓN "verlet()"
 tEjecIni = time.time()
-r,v = verlet(h,nIteraciones,nParticulas,skip,L,margen)
+r,v = verlet(h,nIteraciones,nParticulas,skip,L,margen,moduloVelocidad,soloDesplHoriz)
 tEjecFin = time.time()
 
 
@@ -223,7 +231,7 @@ plt.xlabel("|v|",fontsize=9)
 plt.ylabel("Frecuencia",fontsize=9)
 
 ax2 = plt.subplot(2,2,2)
-plt.hist(promedioVelocidades,bins=20)
+plt.hist(promedioVelocidades,bins=15)
 plt.title("Promedio de velocidades: t=t_f/2 a t=t_f",fontsize=11)
 plt.xlabel("|v|",fontsize=9)
 plt.ylabel("Frecuencia",fontsize=9)
