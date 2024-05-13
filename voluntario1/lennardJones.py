@@ -15,13 +15,13 @@ from numba import jit
 # Definimos algunas constantes
 h = 0.002    
 skip = 10
-nIteraciones = 100000     # 70000
-nParticulas = 16         # 20
-L = 4
+nIteraciones = 70000     # 70000
+nParticulas = 20         # 20
+L = 10
 lMedios = L/2
 margen = 0.05
 
-reposo = True
+reposo = False
 soloDesplHoriz = False
 moduloVelocidad = 1
 
@@ -92,7 +92,7 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloD
                 v[p,1] = 0
         else:
             for p in range(nParticulas):
-                v[p,0] = 2*random.random()-1
+                v[p,0] = 2*np.random.rand()-1
                 v[p,1] = np.random.choice(np.array([-1,1]))*np.sqrt(1-v[p,0]**2)
 
     # CONDICIONES INICIALES - POSICIONES ALEATORIAS
@@ -223,6 +223,10 @@ for t in range(int(nIteraciones/skip-1)):
 
         normaV[t,p] = np.linalg.norm(v[t,p])
 
+
+        temperatura += v[t,p,0]**2 + v[t,p,1]**2
+    
+
     # ESCRITURA EN FICHERO
     eCinetica.append(sumaT)
     ePotencial.append(sumaV)
@@ -231,6 +235,7 @@ for t in range(int(nIteraciones/skip-1)):
         ficheroPlot.write(str(r[t,p,0]) + ", " + str(r[t,p,1]) + "\n")
     ficheroPlot.write("\n") 
 
+temperatura = 2*temperatura/int(nIteraciones/skip)
 
 # CÁLCULO DE LAS VELOCIDADES PARA EL HISTOGRAMA
 promedioVelocidades = np.zeros(nParticulas)
@@ -243,7 +248,7 @@ for p in range(nParticulas):
 
 # CÁLCULO DE LA PRESIÓN                                      !!!!!!!!!!!!! REVISAR !!!!!!!!!!!!!!!!
 presion = np.zeros(int(nIteraciones*h/skip))                #!!!!!!!!!!!!! REVISAR !!!!!!!!!!!!!!!!
-for i in range(int(nIteraciones*h/skip)):                 #!!!!!!!!!!!!! REVISAR !!!!!!!!!!!!!!!!
+for i in range(int(nIteraciones*h/skip)):                   #!!!!!!!!!!!!! REVISAR !!!!!!!!!!!!!!!!
     for t in range(i*int(1/h),int(1/h)*(i+1)):
         presion[i] += fuerzaParedes[t]
 
@@ -283,5 +288,6 @@ plt.show()
 ficheroPlot.write("# Se han realizado "+str(nIteraciones)+" iteraciones con h = "+str(h)+", "+str(nParticulas)+" partículas y skip "+str(skip)+"\n")
 tEjecFin = time.time()
 ficheroPlot.write("# Tiempo de ejecucion: "+str(tEjecFin-tEjecIni)+"\n")
+ficheroPlot.write("# Temperatura: "+str(temperatura)+"\n")
 
 tFicherosFin = time.time()
