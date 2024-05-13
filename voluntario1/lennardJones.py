@@ -15,14 +15,15 @@ from numba import jit
 # Definimos algunas constantes
 h = 0.002    
 skip = 10
-nIteraciones = 70000     # 70000
+nIteraciones = 30000     # 70000
 nParticulas = 20         # 20
 L = 10
 lMedios = L/2
 margen = 0.25
 
-moduloVelocidad = 1
+reposo = False
 soloDesplHoriz = False
+moduloVelocidad = 1
 
 eCinetica = []
 ePotencial = []
@@ -41,7 +42,8 @@ def distanciaToroideGlobal(vector,t,p,j,L,lMedios):
 
 
 @jit(nopython=True,fastmath=True)
-def verlet(h,nIteraciones,nParticulas,skip,L,margen,moduloVelocidad,soloDesplHoriz):
+def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloDesplHoriz):
+
     # PARÁMETROS INICIALES DEL SISTEMA
     r = np.zeros((nParticulas,2))
     v = np.zeros((nParticulas,2))
@@ -52,6 +54,8 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,moduloVelocidad,soloDesplHor
     evA = np.zeros((nParticulas,2))
     posiciones = np.zeros((int(nIteraciones/skip),nParticulas,2))
     velocidades = np.zeros((int(nIteraciones/skip),nParticulas,2))
+    fuerzaParedes = np.zeros((int(nIteraciones/skip)))
+    fuera = np.zeros((nParticulas,2))
 
     hMedios = h/2
     lMedios = L/2
@@ -81,14 +85,15 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,moduloVelocidad,soloDesplHor
 
 
     # CONDICIONES INICIALES - VELOCIDADES ALEATORIAS
-    if soloDesplHoriz == True:
-        for p in range(nParticulas):
-            v[p,0] = moduloVelocidad*random.random()
-            v[p,1] = 0
-    else:
-        for p in range(nParticulas):
-            v[p,0] = moduloVelocidad*(2*random.random()-1)
-            v[p,1] = np.random.choice(np.array([-1,1]))*np.sqrt(moduloVelocidad-v[p,0]**2)
+    if reposo == False:
+        if soloDesplHoriz == True:
+            for p in range(nParticulas):
+                v[p,0] = moduloVelocidad*random.random()
+                v[p,1] = 0
+        else:
+            for p in range(nParticulas):
+                v[p,0] = 2*random.random()-1
+                v[p,1] = np.random.choice(np.array([-1,1]))*np.sqrt(1-v[p,0]**2)
 
     # CONDICIONES INICIALES - POSICIONES ALEATORIAS
     for i in range(nParticulas):
@@ -100,15 +105,21 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,moduloVelocidad,soloDesplHor
     def bordes(v,p,L):
         evX = v[p,0]
         evY = v[p,1]
+        fueraX = 0
+        fueraY = 0
         if evX > L:
             evX = evX%L
+            fueraX = 1
         if evX < 0:
             evX = evX%L
+            fueraX = -1
         if evY > L:
             evY = evY%L
+            fueraY = 1
         if evY < 0:
             evY = evY%L
-        return np.array([evX,evY])
+            fueraY = -1
+        return np.array([evX,evY]),np.array([fueraX,fueraY])
 
     # CONDICIONES DE CONTORNO PERIÓDICO - DISTANCIA MÍNIMA ENTRE DOS PARTÍCULAS 
     def distanciaToroide(vector,p,j,L,lMedios):
@@ -124,18 +135,21 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,moduloVelocidad,soloDesplHor
                 posiciones[0,p] = r[p]
                 velocidades[0,p] = v[p]
 
+    # BUCLE - ALGORITMO DE VERLET
     for t in range(1,nIteraciones):
 
         # GUARDAR EN LOS VECTORES RESULTADO
         if t%skip == 0:
+            fuerzaParedes[int(t/skip)] = 0
             for p in range(nParticulas):
                 posiciones[int(t/skip),p] = r[p]
                 velocidades[int(t/skip),p] = v[p]
-    
+                fuerzaParedes[int(t/skip)] += np.linalg.norm(2*fuera[p]*v[p])/L
+
 
         # ALGORITMO DE VERLET + COMPROBACIÓN DE CONDICIONES DE CONTORNO
-        for j in range(nParticulas):
-            r[j] = bordes(r,j,L)
+
+        fuera = np.zeros((nParticulas,2))
 
         for p in range(nParticulas):
             aux1 = np.array([0.0,0.0])
@@ -153,7 +167,7 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,moduloVelocidad,soloDesplHor
             evR[p] = r[p]+h*w[p]
 
         for j in range(nParticulas):
-            evR[j] = bordes(evR,j,L) 
+            evR[j],fuera[j] = bordes(evR,j,L)
 
         for p in range(nParticulas):
             aux2 = np.array([0.0,0.0])
@@ -173,17 +187,17 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,moduloVelocidad,soloDesplHor
             r[p] = evR[p]
             v[p] = evV[p]
 
-    return posiciones,velocidades
+    return posiciones,velocidades,fuerzaParedes
 
 ###################################################################################################################
 
 wd = os.path.dirname(__file__)  # Directorio de trabajo
-datosPath = os.path.join(wd,"posParticulas.dat")  
+datosPath = os.path.join(wd,"posParticulas.dat")
 ficheroPlot = open(datosPath, "w")
 
 # CÁLCULO DE POSICIONES, VELOCIDADES Y PERÍODOS MEDIANTE LA FUNCIÓN "verlet()"
 tEjecIni = time.time()
-r,v = verlet(h,nIteraciones,nParticulas,skip,L,margen,moduloVelocidad,soloDesplHoriz)
+r,v,fuerzaParedes = verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloDesplHoriz)
 tEjecFin = time.time()
 
 
@@ -217,6 +231,8 @@ for t in range(int(nIteraciones/skip-1)):
         ficheroPlot.write(str(r[t,p,0]) + ", " + str(r[t,p,1]) + "\n")
     ficheroPlot.write("\n") 
 
+
+# CÁLCULO DE LAS VELOCIDADES PARA EL HISTOGRAMA
 promedioVelocidades = np.zeros(nParticulas)
 for t in range(int(nIteraciones/(2*skip)),int(nIteraciones/skip-1)):
     for p in range(nParticulas):
@@ -224,6 +240,15 @@ for t in range(int(nIteraciones/(2*skip)),int(nIteraciones/skip-1)):
 for p in range(nParticulas):
     promedioVelocidades[p] = promedioVelocidades[p]/(nIteraciones/(2*skip))
 
+
+# CÁLCULO DE LA PRESIÓN                                      !!!!!!!!!!!!! REVISAR !!!!!!!!!!!!!!!!
+presion = np.zeros(int(nIteraciones*h/skip))                #!!!!!!!!!!!!! REVISAR !!!!!!!!!!!!!!!!
+for i in range(0,int(nIteraciones*h/skip)):                 #!!!!!!!!!!!!! REVISAR !!!!!!!!!!!!!!!!
+    for t in range(i,i+int(1/h)):
+        presion[i] += fuerzaParedes[t]
+
+
+# REPRESENTACIÓN GRÁFICA DE LOS RESULTADOS
 ax1 = plt.subplot(2,2,1)
 plt.hist(normaV[0])
 plt.title("Velocidades iniciales",fontsize=11)
@@ -246,6 +271,12 @@ plt.ylabel("Energía")
 plt.legend()
 
 plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.2, hspace=0.5)
+plt.show()
+
+plt.plot(presion)
+plt.title("Presión en función del tiempo")
+plt.xlabel("t")
+plt.ylabel("Presión")
 plt.show()
 
 # Por último, escribimos algunos datos de interés al final del fichero
