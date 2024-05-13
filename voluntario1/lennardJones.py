@@ -15,7 +15,7 @@ from numba import jit
 # Definimos algunas constantes
 h = 0.002    
 skip = 10
-nIteraciones = 30000     # 70000
+nIteraciones = 100000     # 70000
 nParticulas = 20         # 20
 L = 10
 lMedios = L/2
@@ -135,16 +135,16 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloD
                 posiciones[0,p] = r[p]
                 velocidades[0,p] = v[p]
 
+
     # BUCLE - ALGORITMO DE VERLET
     for t in range(1,nIteraciones):
 
         # GUARDAR EN LOS VECTORES RESULTADO
         if t%skip == 0:
-            fuerzaParedes[int(t/skip)] = 0
             for p in range(nParticulas):
                 posiciones[int(t/skip),p] = r[p]
                 velocidades[int(t/skip),p] = v[p]
-                fuerzaParedes[int(t/skip)] += np.linalg.norm(2*fuera[p]*v[p])/L
+                fuerzaParedes[int(t/skip)] += (fuera[p,0]*v[p,0]+fuera[p,1]*v[p,1])/L
 
 
         # ALGORITMO DE VERLET + COMPROBACIÓN DE CONDICIONES DE CONTORNO
@@ -243,8 +243,8 @@ for p in range(nParticulas):
 
 # CÁLCULO DE LA PRESIÓN                                      !!!!!!!!!!!!! REVISAR !!!!!!!!!!!!!!!!
 presion = np.zeros(int(nIteraciones*h/skip))                #!!!!!!!!!!!!! REVISAR !!!!!!!!!!!!!!!!
-for i in range(0,int(nIteraciones*h/skip)):                 #!!!!!!!!!!!!! REVISAR !!!!!!!!!!!!!!!!
-    for t in range(i,i+int(1/h)):
+for i in range(int(nIteraciones*h/skip)):                 #!!!!!!!!!!!!! REVISAR !!!!!!!!!!!!!!!!
+    for t in range(i*int(1/h),int(1/h)*(i+1)):
         presion[i] += fuerzaParedes[t]
 
 
