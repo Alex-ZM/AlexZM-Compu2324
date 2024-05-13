@@ -16,12 +16,12 @@ from numba import jit
 h = 0.002    
 skip = 10
 nIteraciones = 100000     # 70000
-nParticulas = 20         # 20
-L = 10
+nParticulas = 16         # 20
+L = 4
 lMedios = L/2
-margen = 0.25
+margen = 0.05
 
-reposo = False
+reposo = True
 soloDesplHoriz = False
 moduloVelocidad = 1
 
