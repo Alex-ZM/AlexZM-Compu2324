@@ -20,22 +20,22 @@ R_L = 1.7374*10**6
 
 m = 500
 r = R_T             # Posición inicial del cohete: radio de la Tierra
-phi = 30*np.pi/180  # Latitud desde la que se lanza el cohete
-v = 15.37             # Módulo de la velocidad de lanzamiento de la nave (en m/s)
-phiVelocidad = 45*np.pi/180  # Ángulo de la velocidad de lanzamiento
+phi = 90*np.pi/180  # Latitud desde la que se lanza el cohete
+v = 11.2             # Módulo de la velocidad de lanzamiento de la nave (en m/s)
+anguloVelocidad = 0*np.pi/180  # Ángulo de la velocidad de lanzamiento
 phiPunto = 10*np.pi/180  # Velocidad angular de la nave
-pPhi = m*r**2*phiPunto
+#pPhi = m*r**2*phiPunto
 
-nIteraciones = 10000
-h = 0.1
+nIteraciones = 100000
+h = 10
 
 # REESCALADO DE LOS PARÁMETROS
 delta = G*M_T/d_TL**3
 mu = M_L/M_T
 r = r/d_TL
-pr = v/d_TL*np.cos(phi-phiVelocidad)
+pr = v/d_TL*np.cos(anguloVelocidad-phi)
 #pPhi = pPhi/(m*d_TL**2)
-pPhi = r*v*np.sin(phiVelocidad-phi)
+pPhi = r*v*np.sin(anguloVelocidad-phi)
 
 ###################################################################################################################
 
@@ -66,7 +66,7 @@ def rungeKutta(h,r,phi,pr,pPhi,omega,nIteraciones,delta,mu):
     def f_pr(pPhi,r,delta,mu,phi,omega,t):
         rPrima = np.sqrt(1+r**2-2*r*np.cos(phi-omega*t))
         return pPhi**2/r**3 - delta*(1/r**2+mu/rPrima**3*(r-np.cos(phi-omega*t)))
-    
+
     def f_phi(pPhi,r):
         return pPhi/r**2
     
@@ -83,18 +83,19 @@ def rungeKutta(h,r,phi,pr,pPhi,omega,nIteraciones,delta,mu):
 
         k_r[1] = h*(vpr[j]+k_pr[0]/2)
         k_phi[1] = h*f_phi(vphi[j]+k_phi[0]/2,vr[j]+k_r[0]/2)
-        k_pr[1] = h*f_pr(vpPhi[j]+k_phi[0]/2,vr[j]+k_r[0]/2,delta,mu,vphi[j]+k_phi[0]/2,omega,t)
-        k_pPhi[1] = h*f_pPhi(delta,mu,vr[j]+k_r[0]/2,vphi[j]+k_phi[0]/2,omega,t)
+        k_pr[1] = h*f_pr(vpPhi[j]+k_phi[0]/2,vr[j]+k_r[0]/2,delta,mu,vphi[j]+k_phi[0]/2,omega,t+h/2)
+        k_pPhi[1] = h*f_pPhi(delta,mu,vr[j]+k_r[0]/2,vphi[j]+k_phi[0]/2,omega,t+h/2)
 
         k_r[2] = h*(vpr[j]+k_pr[1]/2)
         k_phi[2] = h*f_phi(vphi[j]+k_phi[1]/2,vr[j]+k_r[1]/2)
-        k_pr[2] = h*f_pr(vpPhi[j]+k_phi[1]/2,vr[j]+k_r[1]/2,delta,mu,vphi[j]+k_phi[1]/2,omega,t)
-        k_pPhi[2] = h*f_pPhi(delta,mu,vr[j]+k_r[1]/2,vphi[j]+k_phi[1]/2,omega,t)
+        k_pr[2] = h*f_pr(vpPhi[j]+k_phi[1]/2,vr[j]+k_r[1]/2,delta,mu,vphi[j]+k_phi[1]/2,omega,t+h/2)
+        k_pPhi[2] = h*f_pPhi(delta,mu,vr[j]+k_r[1]/2,vphi[j]+k_phi[1]/2,omega,t+h/2)
 
         k_r[3] = h*(vpr[j]+k_pr[2])
         k_phi[3] = h*f_phi(vphi[j]+k_phi[2],vr[j]+k_r[2])
-        k_pr[3] = h*f_pr(vpPhi[j]+k_phi[2],vr[j]+k_r[2],delta,mu,vphi[j]+k_phi[2],omega,t)
-        k_pPhi[3] = h*f_pPhi(delta,mu,vr[j]+k_r[2],vphi[j]+k_phi[2],omega,t)
+        k_pr[3] = h*f_pr(vpPhi[j]+k_phi[2],vr[j]+k_r[2],delta,mu,vphi[j]+k_phi[2],omega,t+h)
+        k_pPhi[3] = h*f_pPhi(delta,mu,vr[j]+k_r[2],vphi[j]+k_phi[2],omega,t+h)
+
 
         vr[j+1] = vr[j] + (k_r[0] + 2*k_r[1] + 2*k_r[2] + k_r[3])/6
         vphi[j+1] = vphi[j] + (k_phi[0] + 2*k_phi[1] + 2*k_phi[2] + k_phi[3])/6
