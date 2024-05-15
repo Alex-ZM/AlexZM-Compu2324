@@ -18,22 +18,23 @@ omega = 2.6617*10**-6
 R_T = 6.37816*10**6
 R_L = 1.7374*10**6
 
-m = 500
+m = 47000
 r = R_T             # Posición inicial del cohete: radio de la Tierra
-phi = 90*np.pi/180  # Latitud desde la que se lanza el cohete
-v = 11.2             # Módulo de la velocidad de lanzamiento de la nave (en m/s)
-anguloVelocidad = 0*np.pi/180  # Ángulo de la velocidad de lanzamiento
+phi = 0*np.pi/180  # Latitud desde la que se lanza el cohete
+v = np.sqrt(2*G*M_T/R_T)/d_TL            # Módulo de la velocidad de lanzamiento de la nave (en m/s)
+anguloVelocidad = np.pi/11.6 #0*np.pi/180  # Ángulo de la velocidad de lanzamiento
 phiPunto = 10*np.pi/180  # Velocidad angular de la nave
 #pPhi = m*r**2*phiPunto
 
 nIteraciones = 100000
-h = 10
+h = 0.1
+skip = 500
 
 # REESCALADO DE LOS PARÁMETROS
 delta = G*M_T/d_TL**3
 mu = M_L/M_T
 r = r/d_TL
-pr = v/d_TL*np.cos(anguloVelocidad-phi)
+pr = v*np.cos(anguloVelocidad-phi)
 #pPhi = pPhi/(m*d_TL**2)
 pPhi = r*v*np.sin(anguloVelocidad-phi)
 
@@ -77,23 +78,23 @@ def rungeKutta(h,r,phi,pr,pPhi,omega,nIteraciones,delta,mu):
     for j in range(nIteraciones-1):
 
         k_r[0] = h*vpr[j]
-        k_phi[0] = h*f_phi(vphi[j],vr[j])
+        k_phi[0] = h*f_phi(vpPhi[j],vr[j])
         k_pr[0] = h*f_pr(vpPhi[j],vr[j],delta,mu,vphi[j],omega,t)
         k_pPhi[0] = h*f_pPhi(delta,mu,vr[j],vphi[j],omega,t)
 
         k_r[1] = h*(vpr[j]+k_pr[0]/2)
-        k_phi[1] = h*f_phi(vphi[j]+k_phi[0]/2,vr[j]+k_r[0]/2)
-        k_pr[1] = h*f_pr(vpPhi[j]+k_phi[0]/2,vr[j]+k_r[0]/2,delta,mu,vphi[j]+k_phi[0]/2,omega,t+h/2)
+        k_phi[1] = h*f_phi(vpPhi[j]+k_pPhi[0]/2,vr[j]+k_r[0]/2)
+        k_pr[1] = h*f_pr(vpPhi[j]+k_pPhi[0]/2,vr[j]+k_r[0]/2,delta,mu,vphi[j]+k_phi[0]/2,omega,t+h/2)
         k_pPhi[1] = h*f_pPhi(delta,mu,vr[j]+k_r[0]/2,vphi[j]+k_phi[0]/2,omega,t+h/2)
 
         k_r[2] = h*(vpr[j]+k_pr[1]/2)
-        k_phi[2] = h*f_phi(vphi[j]+k_phi[1]/2,vr[j]+k_r[1]/2)
-        k_pr[2] = h*f_pr(vpPhi[j]+k_phi[1]/2,vr[j]+k_r[1]/2,delta,mu,vphi[j]+k_phi[1]/2,omega,t+h/2)
+        k_phi[2] = h*f_phi(vpPhi[j]+k_pPhi[1]/2,vr[j]+k_r[1]/2)
+        k_pr[2] = h*f_pr(vpPhi[j]+k_pPhi[1]/2,vr[j]+k_r[1]/2,delta,mu,vphi[j]+k_phi[1]/2,omega,t+h/2)
         k_pPhi[2] = h*f_pPhi(delta,mu,vr[j]+k_r[1]/2,vphi[j]+k_phi[1]/2,omega,t+h/2)
 
         k_r[3] = h*(vpr[j]+k_pr[2])
-        k_phi[3] = h*f_phi(vphi[j]+k_phi[2],vr[j]+k_r[2])
-        k_pr[3] = h*f_pr(vpPhi[j]+k_phi[2],vr[j]+k_r[2],delta,mu,vphi[j]+k_phi[2],omega,t+h)
+        k_phi[3] = h*f_phi(vpPhi[j]+k_pPhi[2],vr[j]+k_r[2])
+        k_pr[3] = h*f_pr(vpPhi[j]+k_pPhi[2],vr[j]+k_r[2],delta,mu,vphi[j]+k_phi[2],omega,t+h)
         k_pPhi[3] = h*f_pPhi(delta,mu,vr[j]+k_r[2],vphi[j]+k_phi[2],omega,t+h)
 
 
@@ -122,9 +123,9 @@ fichero = open(os.path.join(wd,rd), "w")
 posCohete,posLuna,hamiltoniano = rungeKutta(h,r,phi,pr,pPhi,omega,nIteraciones,delta,mu)
 
 for j in range(nIteraciones):
-
-    fichero.write(str(posCohete[j,0]) + "," + str(posCohete[j,1]) + "\n")
-    fichero.write(str(posLuna[j,0]) + "," + str(posLuna[j,1]) + "\n\n")
+    if j%skip == 0:
+        fichero.write(str(posCohete[j,0]) + "," + str(posCohete[j,1]) + "\n")
+        fichero.write(str(posLuna[j,0]) + "," + str(posLuna[j,1]) + "\n\n")
 
 print(hamiltoniano[0])
 print(hamiltoniano[nIteraciones-2])
