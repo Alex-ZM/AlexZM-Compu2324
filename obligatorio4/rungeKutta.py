@@ -21,76 +21,96 @@ R_L = 1.7374*10**6
 m = 500
 r = R_T             # Posición inicial del cohete: radio de la Tierra
 phi = 30*np.pi/180  # Latitud desde la que se lanza el cohete
-v = 200                  # Módulo de la velocidad de lanzamiento de la nave (en m/s)
+v = 15.37             # Módulo de la velocidad de lanzamiento de la nave (en m/s)
+phiVelocidad = 45*np.pi/180  # Ángulo de la velocidad de lanzamiento
 phiPunto = 10*np.pi/180  # Velocidad angular de la nave
 pPhi = m*r**2*phiPunto
 
-nIteraciones = 100000
-h = 0.01
+nIteraciones = 10000
+h = 0.1
 
 # REESCALADO DE LOS PARÁMETROS
 delta = G*M_T/d_TL**3
 mu = M_L/M_T
 r = r/d_TL
-rPrima = np.sqrt(1+r**2-2*r*np.cos(phi))
-v = v/d_TL
-pr = v
-pPhi = pPhi/(m*d_TL**2)
-phiPunto = pPhi/r**2
-prPunto = pPhi**2/r**3 - delta*(1/r**2+mu/rPrima**3*(r-np.cos(phi)))
-pPhiPunto = -delta*mu*r/rPrima**3*np.sin(phi)
+pr = v/d_TL*np.cos(phi-phiVelocidad)
+#pPhi = pPhi/(m*d_TL**2)
+pPhi = r*v*np.sin(phiVelocidad-phi)
 
 ###################################################################################################################
 
-def rungeKutta(h,pr,phiPunto,prPunto,pPhiPunto,nIteraciones):
+def rungeKutta(h,r,phi,pr,pPhi,omega,nIteraciones,delta,mu):
 
     t = 0
 
+    k_r = np.zeros(4)
+    k_phi = np.zeros(4)
     k_pr = np.zeros(4)
-    k_phiPunto = np.zeros(4)
-    k_prPunto = np.zeros(4)
-    k_pPhiPunto = np.zeros(4)
+    k_pPhi = np.zeros(4)
     
+    vr = np.zeros(nIteraciones)
+    vphi = np.zeros(nIteraciones)
     vpr = np.zeros(nIteraciones)
-    vphiPunto = np.zeros(nIteraciones)
-    vprPunto = np.zeros(nIteraciones)
-    vpPhiPunto = np.zeros(nIteraciones)
+    vpPhi = np.zeros(nIteraciones)
 
+    hamiltoniano = np.zeros(nIteraciones-1)
+
+    posCohete = np.zeros((nIteraciones,2))
+    posLuna = np.zeros((nIteraciones,2))
+
+    vr[0] = r
+    vphi[0] = phi
     vpr[0] = pr
-    vphiPunto[0] = phiPunto
-    vprPunto[0] = prPunto
-    vpPhiPunto[0] = pPhiPunto
+    vpPhi[0] = pPhi
+
+    def f_pr(pPhi,r,delta,mu,phi,omega,t):
+        rPrima = np.sqrt(1+r**2-2*r*np.cos(phi-omega*t))
+        return pPhi**2/r**3 - delta*(1/r**2+mu/rPrima**3*(r-np.cos(phi-omega*t)))
+    
+    def f_phi(pPhi,r):
+        return pPhi/r**2
+    
+    def f_pPhi(delta,mu,r,phi,omega,t):
+        rPrima = np.sqrt(1+r**2-2*r*np.cos(phi-omega*t))
+        return -delta*mu*r/rPrima**3*np.sin(phi-omega*t)
     
     for j in range(nIteraciones-1):
 
-        k_pr[0] = h*vpr[j]
-        k_phiPunto[0] = h*vphiPunto[j]
-        k_prPunto[0] = h*vprPunto[j]
-        k_pPhiPunto[0] = h*vpPhiPunto[j]
+        k_r[0] = h*vpr[j]
+        k_phi[0] = h*f_phi(vphi[j],vr[j])
+        k_pr[0] = h*f_pr(vpPhi[j],vr[j],delta,mu,vphi[j],omega,t)
+        k_pPhi[0] = h*f_pPhi(delta,mu,vr[j],vphi[j],omega,t)
 
-        k_pr[1] = h*(vpr[j]+k_pr[0]/2)
-        k_phiPunto[1] = h*(vphiPunto[j]+k_phiPunto[0]/2)
-        k_prPunto[1] = h*(vprPunto[j]+k_prPunto[0]/2)
-        k_pPhiPunto[1] =h*(vpPhiPunto[j]+k_pPhiPunto[0]/2)
+        k_r[1] = h*(vpr[j]+k_pr[0]/2)
+        k_phi[1] = h*f_phi(vphi[j]+k_phi[0]/2,vr[j]+k_r[0]/2)
+        k_pr[1] = h*f_pr(vpPhi[j]+k_phi[0]/2,vr[j]+k_r[0]/2,delta,mu,vphi[j]+k_phi[0]/2,omega,t)
+        k_pPhi[1] = h*f_pPhi(delta,mu,vr[j]+k_r[0]/2,vphi[j]+k_phi[0]/2,omega,t)
 
-        k_pr[2] = h*(vpr[j]+k_pr[1]/2)
-        k_phiPunto[2] = h*(vphiPunto[j]+k_phiPunto[1]/2)
-        k_prPunto[2] = h*(vprPunto[j]+k_prPunto[1]/2)
-        k_pPhiPunto[2] =h*(vpPhiPunto[j]+k_pPhiPunto[1]/2)
+        k_r[2] = h*(vpr[j]+k_pr[1]/2)
+        k_phi[2] = h*f_phi(vphi[j]+k_phi[1]/2,vr[j]+k_r[1]/2)
+        k_pr[2] = h*f_pr(vpPhi[j]+k_phi[1]/2,vr[j]+k_r[1]/2,delta,mu,vphi[j]+k_phi[1]/2,omega,t)
+        k_pPhi[2] = h*f_pPhi(delta,mu,vr[j]+k_r[1]/2,vphi[j]+k_phi[1]/2,omega,t)
 
-        k_pr[3] = h*(vpr[j]+k_pr[2])
-        k_phiPunto[3] = h*(vphiPunto[j]+k_phiPunto[2])
-        k_prPunto[3] = h*(vprPunto[j]+k_prPunto[2])
-        k_pPhiPunto[3] = h*(vpPhiPunto[j]+k_pPhiPunto[2])
+        k_r[3] = h*(vpr[j]+k_pr[2])
+        k_phi[3] = h*f_phi(vphi[j]+k_phi[2],vr[j]+k_r[2])
+        k_pr[3] = h*f_pr(vpPhi[j]+k_phi[2],vr[j]+k_r[2],delta,mu,vphi[j]+k_phi[2],omega,t)
+        k_pPhi[3] = h*f_pPhi(delta,mu,vr[j]+k_r[2],vphi[j]+k_phi[2],omega,t)
 
+        vr[j+1] = vr[j] + (k_r[0] + 2*k_r[1] + 2*k_r[2] + k_r[3])/6
+        vphi[j+1] = vphi[j] + (k_phi[0] + 2*k_phi[1] + 2*k_phi[2] + k_phi[3])/6
         vpr[j+1] = vpr[j] + (k_pr[0] + 2*k_pr[1] + 2*k_pr[2] + k_pr[3])/6
-        vphiPunto[j+1] = vphiPunto[j] + (k_phiPunto[0] + 2*k_phiPunto[1] + 2*k_phiPunto[2] + k_phiPunto[3])/6
-        vprPunto[j+1] = vprPunto[j] + (k_prPunto[0] + 2*k_prPunto[1] + 2*k_prPunto[2] + k_prPunto[3])/6
-        vpPhiPunto[j+1] = vpPhiPunto[j] + (k_pPhiPunto[0] + 2*k_pPhiPunto[1] + 2*k_pPhiPunto[2] + k_pPhiPunto[3])/6
+        vpPhi[j+1] = vpPhi[j] + (k_pPhi[0] + 2*k_pPhi[1] + 2*k_pPhi[2] + k_pPhi[3])/6
+
+        posCohete[j,0] = vr[j]*np.cos(vphi[j])
+        posCohete[j,1] = vr[j]*np.sin(vphi[j])
+        posLuna[j,0] = np.cos(omega*t)
+        posLuna[j,1] = np.sin(omega*t)
+
+        hamiltoniano[j] = vpr[j]**2*m*d_TL**2/2 + vpPhi[j]**2*m*d_TL**4/2 - G*m*M_T*d_TL/vr[j] - G*m*M_L*d_TL/(np.linalg.norm(np.subtract(posCohete,posLuna)))
 
         t = t+h
 
-    return vpr,vphiPunto,vprPunto,vpPhiPunto
+    return posCohete,posLuna,hamiltoniano
 
 ###################################################################################################################
 
@@ -98,14 +118,12 @@ wd = os.path.dirname(__file__)  # Directorio de trabajo
 rd = "cohete_data.dat"     # Directorio relativo
 fichero = open(os.path.join(wd,rd), "w")  
 
-vpr,vphiPunto,vprPunto,vpPhiPunto = rungeKutta(h,pr,phiPunto,prPunto,pPhiPunto,nIteraciones)
+posCohete,posLuna,hamiltoniano = rungeKutta(h,r,phi,pr,pPhi,omega,nIteraciones,delta,mu)
 
 for j in range(nIteraciones):
 
-    xCohete = vpr[j]*np.cos(vphiPunto[j])
-    yCohete = vpr[j]*np.sin(vphiPunto[j])
-    xLuna = np.cos(omega*j*h)
-    yLuna = np.sin(omega*j*h)
+    fichero.write(str(posCohete[j,0]) + "," + str(posCohete[j,1]) + "\n")
+    fichero.write(str(posLuna[j,0]) + "," + str(posLuna[j,1]) + "\n\n")
 
-    fichero.write(str(xCohete) + "," + str(yCohete) + "\n")
-    fichero.write(str(xLuna) + "," + str(yLuna) + "\n\n")
+print(hamiltoniano[0])
+print(hamiltoniano[nIteraciones-2])
