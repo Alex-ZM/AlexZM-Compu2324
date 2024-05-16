@@ -51,7 +51,7 @@ import os
 wd = os.path.dirname(__file__)      # Directorio de trabajo
 rd = "cohete_data.dat"               # Directorio relativo
 file_in = os.path.join(wd,rd) # Nombre del fichero de datos
-file_out = "planetas" # Nombre del fichero de salida (sin extensión)
+file_out = "rungeKutta" # Nombre del fichero de salida (sin extensión)
 
 # Límites de los ejes X e Y
 x_min = -0.2
@@ -62,7 +62,7 @@ y_max =  1.4
 interval = 1 # Tiempo entre fotogramas en milisegundos
 show_trail = True # Muestra la "estela" del planeta
 trail_width = 1 # Ancho de la estela
-save_to_file = False # False: muestra la animación por pantalla,
+save_to_file = True # False: muestra la animación por pantalla,
                     # True: la guarda en un fichero
 dpi = 300 # Calidad del vídeo de salida (dots per inch)
 

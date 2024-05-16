@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import random
 import time
 import os
+import sys
 from numba import jit
 
 ###################################################################################################################
@@ -16,14 +17,17 @@ from numba import jit
 h = 0.002    
 skip = 10
 nIteraciones = 70000     # 70000
-nParticulas = 20         # 20
-L = 10
+nParticulas = 16         # 20
+L = 4
 lMedios = L/2
 margen = 0.05
 
-reposo = False
+reposo = True
 soloDesplHoriz = False
 moduloVelocidad = 1
+redHexagonal15 = True
+if redHexagonal15:
+    nParticulas = 15  # Para que entren en la cuadrícula
 
 eCinetica = []
 ePotencial = []
@@ -42,7 +46,7 @@ def distanciaToroideGlobal(vector,t,p,j,L,lMedios):
 
 
 @jit(nopython=True,fastmath=True)
-def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloDesplHoriz):
+def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloDesplHoriz,redHexagonal):
 
     # PARÁMETROS INICIALES DEL SISTEMA
     r = np.zeros((nParticulas,2))
@@ -62,38 +66,56 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloD
 
 
     # CONDICIONES INICIALES - POSICIONES EQUIESPACIADAS EN CUADRÍCULA
-    particulasPorFila = int(np.floor(np.sqrt(nParticulas)))
-    separacionInicialH = L/particulasPorFila
-    if nParticulas > particulasPorFila**2:
-        separacionInicialV = L/(particulasPorFila+1)
-    else: separacionInicialV = separacionInicialH
+    if redHexagonal == False:
+        particulasPorFila = int(np.floor(np.sqrt(nParticulas)))
+        separacionInicialH = L/particulasPorFila
+        if nParticulas > particulasPorFila**2:
+            separacionInicialV = L/(particulasPorFila+1)
+        else: separacionInicialV = separacionInicialH
 
-    for f in range(particulasPorFila):
-        for i in range(particulasPorFila):  
-            r[f*particulasPorFila+i,1] = i*separacionInicialH  # Equiespaciado horizontal
-    particulasUltimaFila = nParticulas-particulasPorFila**2
-    if particulasUltimaFila != 0:
-        for i in range(particulasUltimaFila):
-            r[particulasPorFila**2+i,1] = i*separacionInicialH  # Equiespaciado horizontal (última fila)
+        for f in range(particulasPorFila):
+            for i in range(particulasPorFila):  
+                r[f*particulasPorFila+i,1] = i*separacionInicialH  # Equiespaciado horizontal
+        particulasUltimaFila = nParticulas-particulasPorFila**2
+        if particulasUltimaFila != 0:
+            for i in range(particulasUltimaFila):
+                r[particulasPorFila**2+i,1] = i*separacionInicialH  # Equiespaciado horizontal (última fila)
 
-    for c in range(particulasPorFila):
-        for i in range(particulasPorFila):
-            r[c*particulasPorFila+i,0] = c*separacionInicialV  # Equiespaciado vertical
-    if particulasUltimaFila != 0:
-        for i in range(particulasUltimaFila):
-            r[particulasPorFila**2+i,0] = particulasPorFila*separacionInicialV  # Equiespaciado vertical (última fila)
-
-
+        for c in range(particulasPorFila):
+            for i in range(particulasPorFila):
+                r[c*particulasPorFila+i,0] = c*separacionInicialV  # Equiespaciado vertical
+        if particulasUltimaFila != 0:
+            for i in range(particulasUltimaFila):
+                r[particulasPorFila**2+i,0] = particulasPorFila*separacionInicialV  # Equiespaciado vertical (última fila)
+    
+    # CONDICIONES INICIALES - DISTRIBUCIÓN HEXAGONAL HOMOGÉNEA
+    else:
+        huecosPorFila = 5
+        espaciado = L/huecosPorFila
+        x = 0.1
+        y = 0.1
+        i = 0
+        for p in range(huecosPorFila**2-1):
+            if x > L:
+                x = x - L + espaciado/2
+                y += espaciado
+            if (p)%3 == 0: # Cada 2 partículas, pone un hueco (no pone partícula)
+                x += espaciado
+            else:
+                r[i] = np.array([x,y])
+                x += espaciado
+                i += 1
+                        
     # CONDICIONES INICIALES - VELOCIDADES ALEATORIAS
     if reposo == False:
         if soloDesplHoriz == True:
             for p in range(nParticulas):
                 v[p,0] = moduloVelocidad*random.random()
                 v[p,1] = 0
-        else:
-            for p in range(nParticulas):
-                v[p,0] = 2*np.random.rand()-1
-                v[p,1] = np.random.choice(np.array([-1,1]))*np.sqrt(1-v[p,0]**2)
+        #else:
+        #    for p in range(nParticulas):
+        #        v[p,0] = 2*np.random.rand()-1
+        #        v[p,1] = np.random.choice(np.array([-1,1]))*np.sqrt(1-v[p,0]**2)
 
     # CONDICIONES INICIALES - POSICIONES ALEATORIAS
     for i in range(nParticulas):
@@ -197,7 +219,7 @@ ficheroPlot = open(datosPath, "w")
 
 # CÁLCULO DE POSICIONES, VELOCIDADES Y PERÍODOS MEDIANTE LA FUNCIÓN "verlet()"
 tEjecIni = time.time()
-r,v,fuerzaParedes = verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloDesplHoriz)
+r,v,fuerzaParedes = verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloDesplHoriz,redHexagonal15)
 tEjecFin = time.time()
 
 
@@ -237,13 +259,10 @@ for t in range(int(nIteraciones/skip-1)):
 
 temperatura = 2*temperatura/int(nIteraciones/skip)
 
-# CÁLCULO DE LAS VELOCIDADES PARA EL HISTOGRAMA
-promedioVelocidades = np.zeros(nParticulas)
-for t in range(int(nIteraciones/(2*skip)),int(nIteraciones/skip-1)):
+promedioVelocidades = np.zeros(int(nIteraciones/(2*skip)))
+for t in range(0,int(nIteraciones/(2*skip))-nParticulas,nParticulas):
     for p in range(nParticulas):
-        promedioVelocidades[p] += np.linalg.norm(v[t,p])
-for p in range(nParticulas):
-    promedioVelocidades[p] = promedioVelocidades[p]/(nIteraciones/(2*skip))
+        promedioVelocidades[t+p] = np.linalg.norm(v[t+int(nIteraciones/(2*skip)),p])
 
 
 # CÁLCULO DE LA PRESIÓN                                      !!!!!!!!!!!!! REVISAR !!!!!!!!!!!!!!!!
@@ -261,7 +280,7 @@ plt.xlabel("|v|",fontsize=9)
 plt.ylabel("Frecuencia",fontsize=9)
 
 ax2 = plt.subplot(2,2,2)
-plt.hist(promedioVelocidades,bins=15)
+plt.hist(promedioVelocidades,bins=100)
 plt.title("Promedio de velocidades: t=t_f/2 a t=t_f",fontsize=11)
 plt.xlabel("|v|",fontsize=9)
 plt.ylabel("Frecuencia",fontsize=9)
