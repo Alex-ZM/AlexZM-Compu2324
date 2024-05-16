@@ -22,12 +22,19 @@ L = 4
 lMedios = L/2
 margen = 0.05
 
+# Configuración de las condiciones iniciales (CAMBIAR)
 reposo = True
 soloDesplHoriz = False
 moduloVelocidad = 1
-redHexagonal15 = True
-if redHexagonal15:
-    nParticulas = 15  # Para que entren en la cuadrícula
+redHexagonal24 = True
+
+# Configuración para observar el comportamiento de la red hexagonal
+if redHexagonal24:
+    nIteraciones = 1000
+    nParticulas = 24 
+    L = 4.5        
+    lMedios = L/2
+    skip = 1   
 
 eCinetica = []
 ePotencial = []
@@ -46,7 +53,7 @@ def distanciaToroideGlobal(vector,t,p,j,L,lMedios):
 
 
 @jit(nopython=True,fastmath=True)
-def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloDesplHoriz,redHexagonal):
+def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloDesplHoriz,redHexagonal24):
 
     # PARÁMETROS INICIALES DEL SISTEMA
     r = np.zeros((nParticulas,2))
@@ -66,7 +73,7 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloD
 
 
     # CONDICIONES INICIALES - POSICIONES EQUIESPACIADAS EN CUADRÍCULA
-    if redHexagonal == False:
+    if redHexagonal24 == False:
         particulasPorFila = int(np.floor(np.sqrt(nParticulas)))
         separacionInicialH = L/particulasPorFila
         if nParticulas > particulasPorFila**2:
@@ -90,21 +97,27 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloD
     
     # CONDICIONES INICIALES - DISTRIBUCIÓN HEXAGONAL HOMOGÉNEA
     else:
-        huecosPorFila = 5
+        huecosPorFila = 6
         espaciado = L/huecosPorFila
-        x = 0.1
-        y = 0.1
+        x = 0
+        y = 0
         i = 0
+        n = 2
         for p in range(huecosPorFila**2-1):
-            if x > L:
+            if x >= L:
                 x = x - L + espaciado/2
                 y += espaciado
-            if (p)%3 == 0: # Cada 2 partículas, pone un hueco (no pone partícula)
+                if n%3 != 1:
+                    n = n-1
+            if n%3 == 0: # Cada 2 partículas, pone un hueco (no pone partícula)
                 x += espaciado
+                n +=1
             else:
                 r[i] = np.array([x,y])
                 x += espaciado
                 i += 1
+                n += 1
+
                         
     # CONDICIONES INICIALES - VELOCIDADES ALEATORIAS
     if reposo == False:
@@ -219,7 +232,7 @@ ficheroPlot = open(datosPath, "w")
 
 # CÁLCULO DE POSICIONES, VELOCIDADES Y PERÍODOS MEDIANTE LA FUNCIÓN "verlet()"
 tEjecIni = time.time()
-r,v,fuerzaParedes = verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloDesplHoriz,redHexagonal15)
+r,v,fuerzaParedes = verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloDesplHoriz,redHexagonal24)
 tEjecFin = time.time()
 
 
