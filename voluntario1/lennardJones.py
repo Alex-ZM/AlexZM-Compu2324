@@ -42,7 +42,7 @@ eTotal = []
 normaV = np.zeros((int(nIteraciones/skip),nParticulas),dtype=np.float32)
 
 # CONDICIONES DE CONTORNO PERIÓDICO - DISTANCIA MÍNIMA ENTRE DOS PARTÍCULAS 
-def distanciaToroideGlobal(vector,t,p,j,L,lMedios):
+def distanciaGlobal(vector,t,p,j,L,lMedios):
     distX = vector[t,p,0]-vector[t,j,0]
     distY = vector[t,p,1]-vector[t,j,1]
     if np.abs(distX) > lMedios:
@@ -157,7 +157,7 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloD
         return np.array([evX,evY]),np.array([fueraX,fueraY])
 
     # CONDICIONES DE CONTORNO PERIÓDICO - DISTANCIA MÍNIMA ENTRE DOS PARTÍCULAS 
-    def distanciaToroide(vector,p,j,L,lMedios):
+    def distancia(vector,p,j,L,lMedios):
         distX = vector[p,0]-vector[j,0]
         distY = vector[p,1]-vector[j,1]
         if np.abs(distX) > lMedios:
@@ -190,7 +190,7 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloD
             aux1 = np.array([0.0,0.0])
             for j in range(nParticulas):
                 if p != j:
-                    R = distanciaToroide(r,p,j,L,lMedios)
+                    R = distancia(r,p,j,L,lMedios)
                     normaR = np.linalg.norm(R)
                     aux1 = aux1 + (48/normaR**13 - 24/normaR**7)*R/normaR
             a[p] = aux1
@@ -208,7 +208,7 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloD
             aux2 = np.array([0.0,0.0])
             for j in range(nParticulas):
                 if p != j:
-                    R = distanciaToroide(evR,p,j,L,lMedios)
+                    R = distancia(evR,p,j,L,lMedios)
                     normaR = np.linalg.norm(R)
                     aux2 = aux2 + (48/normaR**13 - 24/normaR**7)*R/normaR
             evA[p] = aux2
@@ -252,7 +252,7 @@ for t in range(int(nIteraciones/skip-1)):
         ePotencialAux = 0
         for j in range(nParticulas):
             if p != j:
-                R = np.linalg.norm(distanciaToroideGlobal(r,t,p,j,L,lMedios))
+                R = np.linalg.norm(distanciaGlobal(r,t,p,j,L,lMedios))
                 ePotencialAux += (R**(-12)-R**(-6))
         sumaV += 2*ePotencialAux
 
