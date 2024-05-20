@@ -11,10 +11,10 @@ from numba import jit
 ###################################################################################################################
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
-N = 32    # Dimensión de la cuadrícula
+N = 200    # Dimensión de la cuadrícula
 T = 1    # Temperatura T = [0,5]
-t = 20000  # Tiempo
-skip = 10
+t = 700000  # Tiempo
+skip = 700
 
 # CREACIÓN DE LA MATRIZ DE ESPINES s
 s = np.random.choice([-1,+1], size=(N,N)).astype(np.int8)
@@ -68,6 +68,7 @@ for w in range(t):
     
     # Se guarda el estado de la red en este instante
     if w%skip==0:
+        print(w)
         fichero.write("\n")
         for i in range(N):
             fichero.write(' '.join(map(str, s[i])) + "\n")
