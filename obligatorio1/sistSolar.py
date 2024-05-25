@@ -17,10 +17,10 @@ masaSolar = 1.98855*10**30
 UA = 1.496*10**11  
 G = 6.67*10**(-11)  
 h = 0.0001          
-nIteraciones = 1000000    
+nIteraciones = 100000    
 skip = 400         
 relativoATierra = False  # Solo funciona si nPlanetas>=3
-nPlanetas = 5
+nPlanetas = 2
 
 hMedios = h/2
 
