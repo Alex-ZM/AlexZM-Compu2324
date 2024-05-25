@@ -13,8 +13,9 @@ from numba import jit
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
 N = 200    # Dimensión de la cuadrícula
 T = 1    # Temperatura T = [0,5]
-t = 700000  # Tiempo
-skip = 700
+pmc = 3000  # Número de pasos Montecarlo 
+t = pmc*N**2  
+skip = 40*pmc
 
 # CREACIÓN DE LA MATRIZ DE ESPINES s
 s = np.random.choice([-1,+1], size=(N,N)).astype(np.int8)
@@ -75,7 +76,9 @@ for w in range(t):
         
 
 fin = time.time()
-print("\n|| Red "+str(N)+"x"+str(N)+"\n|| T = "+str(T)+"\n|| "+str(t)+" iteraciones (~"+f"{(t/N**2):.0f}"+" pmc)")
+print("\n|| Red "+str(N)+"x"+str(N)+"\n|| T = "+str(T)+"\n|| "+str(t)+" iteraciones (~"+f"{(pmc):.0f}"+" pmc)")
 print("----> Tiempo de ejecución: "+f"{(fin-ini):.2f}"+" s\n")
+fichero.write("\n# || Red "+str(N)+"x"+str(N)+"\n# || T = "+str(T)+"\n# || "+str(t)+" iteraciones (~"+f"{(pmc):.0f}"+" pmc)")
+fichero.write("\n# ----> Tiempo de ejecucion: "+f"{(fin-ini):.2f}"+" s\n")
 
 fichero.close()
