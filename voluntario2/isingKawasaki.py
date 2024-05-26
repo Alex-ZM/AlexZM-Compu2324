@@ -140,9 +140,9 @@ def energiaMediaPorParticula(s,N):
 ###################################################################################################################
 
 wd = os.path.dirname(__file__)  # Directorio de trabajo
-dirDatos = "datos\\ik_data_" + str(N) + "_" + str(pmc) + "_" + str(skip) + ".dat"          
-dirMag = "datos\\ik_magn_" + str(N) + "_" + str(pmc) + "_" + str(skip) + ".dat"       
-dirE = "datos\\ik_energiaPP_" + str(N) + "_" + str(pmc) + "_" + str(skip) + ".dat"  
+dirDatos = "datos\\ik_data_" + str(N) + "_" + str(pmc) + "_" + str(skip/pmc) + ".dat"          
+dirMag = "datos\\ik_magn_" + str(N) + "_" + str(pmc) + "_" + str(skip/pmc) + ".dat"       
+dirE = "datos\\ik_energiaPP_" + str(N) + "_" + str(pmc) + "_" + str(skip/pmc) + ".dat"  
 fichero = open(os.path.join(wd,dirDatos), "w")  
 ficheroMagn = open(os.path.join(wd,dirMag), "w")  
 ficheroE = open(os.path.join(wd,dirE), "w")  
