@@ -7,13 +7,14 @@ import random
 import numpy as np
 import os
 import time
+from numba import jit
 
 ###################################################################################################################
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
 N = 64    # Dimensión de la cuadrícula
-T = 3    # Temperatura T = [0,5]
-pmc = 800  # Número de pasos Montecarlo
+T = 1    # Temperatura T = [0,5]
+pmc = 400  # Número de pasos Montecarlo
 t = pmc*N**2
 skip = 40*pmc
 
@@ -25,8 +26,8 @@ condIni = "magnNula"
 if condIni == "magnAleatoria":
     s = np.random.choice([-1,+1], size=(N+2,N)).astype(np.int8)
     for j in range(N):
-        s[0,j] = 1
-        s[N+1,j] = -1
+        s[0,j] = -1
+        s[N+1,j] = 1
 elif condIni == "magnNula":
     s = np.ones((N+2,N)).astype(np.int8)
     for _ in range(int(N**2/2)):
@@ -37,11 +38,12 @@ elif condIni == "magnNula":
             j = np.random.randint(0,N-1)
         s[i,j] = -1
     for j in range(N):
-        s[0,j] = 1
-        s[N+1,j] = -1
+        s[0,j] = -1
+        s[N+1,j] = 1
 ###################################################################################################################
 
-def condContorno(j):
+#@jit(nopython=True)
+def condContorno(j,N):
     if j==N-1:       # 
         left = j-1   # 
         right = 0    # 
@@ -59,43 +61,34 @@ for i in range(1,N+1):
     for j in range(N):
         magn += s[i,j]
 
+def magnArriba(s,N):
+    magnUp = 0
+    for i in range(1,int((N+1)/2)):
+        for j in range(N):
+            magnUp += s[i,j]
+    return magnUp/(N**2/2)
+
+def magnAbajo(s,N):
+    magnDown = 0
+    for i in range(int((N+1)/2),N+1):
+        for j in range(N):
+            magnDown += s[i,j]
+    return magnDown/(N**2/2)
+
 ## CÁLCULO DE LA ENERGÍA DEL SISTEMA EN EL INSTANTE INICIAL
 #E = 0
 #for i in range(N):
 #    for j in range(N):
-#        up,down,left,right = condContorno(i,j)
+#        left,right = condContorno(j,N)
 #        E = E-0.5*(s[i,j]+(s[up,j]+s[down,j]+s[i,left]+s[i,right]))
 
-
-###################################################################################################################
-
-wd = os.path.dirname(__file__)  # Directorio de trabajo
-rd = "isingKawasaki_data.dat"           # Directorio relativo
-fichero = open(os.path.join(wd,rd), "w")  
-
-ini = time.time()
-for w in range(t):
-
-    i = random.randint(1,N)   # Se elijen dos partículas aleatorias vecinas
-    j = random.randint(0,N-1)   # p1=(i,j) ; p2=(u,v)
-    flip = np.random.choice([-1,1])
-    if flip == -1: 
-        u = i + 1
-        v = j
-    else: 
-        u = i
-        if j != N-1:
-            v = j + 1 
-        else:
-            v = 0
-
-    # Si las dos partículas tienen igual espín, no hacer nada
-    # Si las dos partículas tienen diferente espín, calcular energía y probabilidad
+#@jit(nopython=True)
+def isingKawasaki(flip,s,i,j,u,v,N,T):
     if s[i,j] != s[u,v]:  
         up1,up2 = i-1,i-1
         down1,down2 = i+1,i+1
-        left1,right1 = condContorno(j)
-        left2,right2 = condContorno(v)
+        left1,right1 = condContorno(j,N)
+        left2,right2 = condContorno(v,N)
 
         if flip == -1:
             deltaE = 2*s[i,j]*(s[i,right1]+s[i,left1]+s[up1,j]-s[u,right2]-s[u,left2]-s[down2,v]) # Pareja vertical
@@ -107,17 +100,50 @@ for w in range(t):
             p = 1    # Evaluación de p
         else:        # 
             p = pE   # 
-        n = random.random()  # Número aleatorio entre 0 y 1
+        n = np.random.rand()  # Número aleatorio entre 0 y 1
 
         # PERMUTACIÓN DE ESPINES s1,s2 = s2,s1
         if n<p:  
             s[i,j], s[u,v] = s[u,v], s[i,j]     
+
+
+###################################################################################################################
+
+wd = os.path.dirname(__file__)  # Directorio de trabajo
+sd = "isingKawasaki_data.dat"          
+magnd = "isingKawasaki_magn.dat"       
+fichero = open(os.path.join(wd,sd), "w")  
+ficheroMagn = open(os.path.join(wd,magnd), "w")  
+
+ini = time.time()
+for w in range(t):
+
+    # Se elijen dos partículas aleatorias vecinas [ p1=(i,j) ; p2=(u,v) ]
+    i = np.random.randint(1,N-1)
+    j = np.random.randint(0,N-1)   
+    flip = np.random.choice([-1,1])
+    # Vecinas verticales
+    if flip == -1:  
+        u = i + 1
+        v = j
+    # Vecinas horizontales
+    else:           
+        u = i
+        if j == N-1:
+            v = 0
+        else:
+            v = j + 1   
     
+    isingKawasaki(flip,s,i,j,u,v,N,T)
+
     # Se guarda el estado de la red en este instante
     if w%skip==0:
         fichero.write("\n")
         for i in range(1,N+1):
             fichero.write(' '.join(map(str, s[i])) + "\n")
+
+        for i in range(1,N+1):
+            ficheroMagn.write(str(magnArriba(s,N)) + "," + str(magnAbajo(s,N)) + "\n")
 
 
 fin = time.time()
