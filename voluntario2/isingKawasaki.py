@@ -6,13 +6,13 @@
 import numpy as np
 import os
 import time
-from numba import jit
+from numba import njit
 
 ###################################################################################################################
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
-N = 32    # Dimensión de la cuadrícula
-T = 1    # Temperatura T = [0,5]
+N = 32      # Dimensión de la cuadrícula
+T = 1       # Temperatura T = [0,5]
 pmc = 5000  # Número de pasos Monte Carlo
 t = pmc*N**2
 skip = 40*pmc
@@ -22,6 +22,7 @@ skip = 40*pmc
 condIni = "magnNula"  
 
 ###################################################################################################################
+
 # CREACIÓN DE LA MATRIZ DE ESPINES s
 if condIni == "magnAleatoria":
     s = np.random.choice([-1,+1], size=(N,N)).astype(np.int8)
@@ -40,10 +41,11 @@ elif condIni == "magnNula":
     for j in range(N):
         s[0,j] = -1
         s[N-1,j] = 1
+
 ###################################################################################################################
 
 # CONDICIONES DE CONTORNO - BORDES VERTICALES CON ESPÍN FIJO
-@jit(nopython=True)
+@njit
 def condContornoV(i,N):
     if i==N-1:      #
         up = i-1    #
@@ -57,7 +59,7 @@ def condContornoV(i,N):
     return up,down
 
 # CONDICIONES DE CONTORNO - PERIODICIDAD HORIZONTAL (CILINDRO)
-@jit(nopython=True)
+@njit
 def condContornoH(j,N):
     if j==N-1:       # 
         left = j-1   # 
@@ -71,13 +73,16 @@ def condContornoH(j,N):
     return left,right
 
 
-# CÁLCULO DE LA MAGNETIZACIÓN DEL SISTEMA
-#magn = 0
-#for i in range(N):
-#    for j in range(N):
-#        magn += s[i,j]
+# MAGNETIZACIÓN DEL SISTEMA
+@njit
+def magnSistema(s,N):
+    magn = 0
+    for i in range(N):
+        for j in range(N):
+            magn += s[i,j]
 
 # MAGNETIZACIÓN PROMEDIO DE LA MITAD SUPERIOR DEL SISTEMA
+@njit
 def magnArriba(s,N):
     magnUp = 0
     for i in range(int((N-1)/2)):
@@ -86,6 +91,7 @@ def magnArriba(s,N):
     return magnUp/(N**2/2)
 
 # MAGNETIZACIÓN PROMEDIO DE LA MITAD INFERIOR DEL SISTEMA
+@njit
 def magnAbajo(s,N):
     magnDown = 0
     for i in range(int((N-1)/2),N):
@@ -95,7 +101,7 @@ def magnAbajo(s,N):
 
 
 # ALGORITMO DE METROPOLIS - ISING KAWASAKI
-@jit(nopython=True)
+@njit
 def isingKawasaki(flip,s,i,j,u,v,N,T):
     if s[i,j] != s[u,v]:  
         up1,down1 = condContornoV(i,N)
@@ -120,15 +126,8 @@ def isingKawasaki(flip,s,i,j,u,v,N,T):
             s[i,j], s[u,v] = s[u,v], s[i,j]    
 
 
-## CÁLCULO DE LA ENERGÍA DEL SISTEMA EN EL INSTANTE INICIAL
-#E = 0
-#for i in range(N):
-#    for j in range(N):
-#        left,right = condContornoH(j,N)
-#        E = E-0.5*(s[i,j]+(s[up,j]+s[down,j]+s[i,left]+s[i,right]))
-
 # ENERGÍA MEDIA POR PARTÍCULA EN EL INSTANTE t
-@jit(nopython=True)
+@njit
 def energiaMediaPorParticula(s,N):
     E = 0
     for i in range(N):
@@ -138,17 +137,17 @@ def energiaMediaPorParticula(s,N):
             E += s[i,j]*(s[up,j]+s[down,j]+s[i,left]+s[i,right])
     return -0.5*E/N**2
 
-
 ###################################################################################################################
 
 wd = os.path.dirname(__file__)  # Directorio de trabajo
-dirDatos = "isingKawasaki_data.dat"          
-dirMag = "isingKawasaki_magn.dat"      
-dirE = "isingKawasaki_energiapp" 
+dirDatos = "datos\\ik_data_" + str(N) + "_" + str(pmc) + "_" + str(skip) + ".dat"          
+dirMag = "datos\\ik_magn_" + str(N) + "_" + str(pmc) + "_" + str(skip) + ".dat"       
+dirE = "datos\\ik_energiaPP_" + str(N) + "_" + str(pmc) + "_" + str(skip) + ".dat"  
 fichero = open(os.path.join(wd,dirDatos), "w")  
 ficheroMagn = open(os.path.join(wd,dirMag), "w")  
 ficheroE = open(os.path.join(wd,dirE), "w")  
 
+# BUCLE PRINCIPAL
 ini = time.time()
 for w in range(t):
 
@@ -156,21 +155,20 @@ for w in range(t):
     i = np.random.randint(0,N-2)
     j = np.random.randint(0,N-1)   
     flip = np.random.choice([-1,1])
-    # Vecinas verticales
-    if flip == -1:  
-        u = i + 1
-        v = j
-    # Vecinas horizontales
-    else:           
-        u = i
-        if j == N-1:
-            v = 0
-        else:
-            v = j + 1   
+    if flip == -1:  # 
+        u = i + 1   # Vecinas verticales
+        v = j       # 
+    else:               #
+        u = i           #
+        if j == N-1:    # Vecinas horizontales
+            v = 0       #
+        else:           #
+            v = j + 1   #
     
+    # Una vez elegida la pareja, se decide si intercambiar los espines o no
     isingKawasaki(flip,s,i,j,u,v,N,T)
 
-    # Se guarda el estado de la red en este instante
+    # Se guarda el estado de la red de espines y de otras magnitudes de interés
     if w%skip==0:
         fichero.write("\n")
         for i in range(N):
@@ -180,9 +178,13 @@ for w in range(t):
             ficheroMagn.write(str(magnArriba(s,N)) + "," + str(magnAbajo(s,N)) + "\n")
 
         ficheroE.write(str(energiaMediaPorParticula(s,N)) + "\n")
-
 fin = time.time()
-print("\n|| Red "+str(N)+"x"+str(N)+"\n|| T = "+str(T)+"\n|| "+str(t)+" iteraciones (~"+f"{(t/N**2):.0f}"+" pmc)")
-print("----> Tiempo de ejecución: "+f"{(fin-ini):.2f}"+" s\n")
 
+###################################################################################################################
+
+# INFORMACIÓN SOBRE LA EJECUCIÓN DEL PROGRAMA
+print("\n|| Red "+str(N)+"x"+str(N)+"\n|| T = "+str(T)+"\n|| "+str(t)+" iteraciones ("+f"{(t/N**2):.0f}"+" pmc)")
+print("----> Tiempo de ejecución: "+f"{(fin-ini):.2f}"+" s\n")
+#fichero.write("\n# || Red "+str(N)+"x"+str(N)+"\n# || T = "+str(T)+"\n# || "+str(t)+" iteraciones ("+f"{(pmc):.0f}"+" pmc)")
+#fichero.write("\n# ----> Tiempo de ejecucion: "+f"{(fin-ini):.2f}"+" s\n")
 fichero.close()
