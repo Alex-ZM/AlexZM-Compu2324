@@ -49,7 +49,7 @@ import os
 # Parámetros
 # ========================================
 wd = os.path.dirname(__file__)      # Directorio de trabajo
-rd = "datos\\ik_data_32_5000_200000.dat"               # Directorio relativo
+rd = "datos\\ik_data_32_5000_40.dat"               # Directorio relativo
 file_in = os.path.join(wd,rd) # Nombre del fichero de datos
 file_out = "ising" # Nombre del fichero de salida (sin extensión)
 
