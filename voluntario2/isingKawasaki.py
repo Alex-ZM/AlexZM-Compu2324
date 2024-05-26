@@ -11,21 +11,37 @@ import time
 ###################################################################################################################
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
-N = 32    # Dimensión de la cuadrícula
-T =1    # Temperatura T = [0,5]
-t = 200000  # Tiempo
-skip = 200
+N = 64    # Dimensión de la cuadrícula
+T = 3    # Temperatura T = [0,5]
+pmc = 800  # Número de pasos Montecarlo
+t = pmc*N**2
+skip = 40*pmc
+
+# SELECCIÓN DE LAS CONDICIONES INICIALES
+# Opciones: "magnNula", "magnAleatoria"
+condIni = "magnNula"  
 
 # CREACIÓN DE LA MATRIZ DE ESPINES s
-s = np.random.choice([-1,+1], size=(N+2,N)).astype(np.int8)
-for j in range(N):
-    s[0,j] = 1
-    s[N+1,j] = -1
-
-
+if condIni == "magnAleatoria":
+    s = np.random.choice([-1,+1], size=(N+2,N)).astype(np.int8)
+    for j in range(N):
+        s[0,j] = 1
+        s[N+1,j] = -1
+elif condIni == "magnNula":
+    s = np.ones((N+2,N)).astype(np.int8)
+    for _ in range(int(N**2/2)):
+        i = np.random.randint(1,N)
+        j = np.random.randint(0,N-1)
+        while s[i,j] == -1:
+            i = np.random.randint(1,N)
+            j = np.random.randint(0,N-1)
+        s[i,j] = -1
+    for j in range(N):
+        s[0,j] = 1
+        s[N+1,j] = -1
 ###################################################################################################################
 
-def condContorno(i,j):
+def condContorno(j):
     if j==N-1:       # 
         left = j-1   # 
         right = 0    # 
@@ -36,6 +52,12 @@ def condContorno(i,j):
         left = j-1   # 
         right = j+1  # 
     return left,right
+
+# CÁLCULO DE LA MAGNETIZACIÓN DEL SISTEMA
+magn = 0
+for i in range(1,N+1):
+    for j in range(N):
+        magn += s[i,j]
 
 ## CÁLCULO DE LA ENERGÍA DEL SISTEMA EN EL INSTANTE INICIAL
 #E = 0
@@ -54,7 +76,7 @@ fichero = open(os.path.join(wd,rd), "w")
 ini = time.time()
 for w in range(t):
 
-    i = random.randint(1,N-1)   # Se elijen dos partículas aleatorias vecinas
+    i = random.randint(1,N)   # Se elijen dos partículas aleatorias vecinas
     j = random.randint(0,N-1)   # p1=(i,j) ; p2=(u,v)
     flip = np.random.choice([-1,1])
     if flip == -1: 
@@ -72,8 +94,8 @@ for w in range(t):
     if s[i,j] != s[u,v]:  
         up1,up2 = i-1,i-1
         down1,down2 = i+1,i+1
-        left1,right1 = condContorno(i,j)
-        left2,right2 = condContorno(u,v)
+        left1,right1 = condContorno(j)
+        left2,right2 = condContorno(v)
 
         if flip == -1:
             deltaE = 2*s[i,j]*(s[i,right1]+s[i,left1]+s[up1,j]-s[u,right2]-s[u,left2]-s[down2,v]) # Pareja vertical
