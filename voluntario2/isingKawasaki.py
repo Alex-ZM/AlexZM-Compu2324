@@ -13,7 +13,7 @@ from numba import jit
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
 N = 32    # Dimensión de la cuadrícula
 T = 1    # Temperatura T = [0,5]
-pmc = 5000  # Número de pasos Montecarlo
+pmc = 5000  # Número de pasos Monte Carlo
 t = pmc*N**2
 skip = 40*pmc
 
@@ -77,6 +77,7 @@ def condContornoH(j,N):
 #    for j in range(N):
 #        magn += s[i,j]
 
+# MAGNETIZACIÓN PROMEDIO DE LA MITAD SUPERIOR DEL SISTEMA
 def magnArriba(s,N):
     magnUp = 0
     for i in range(int((N-1)/2)):
@@ -84,20 +85,13 @@ def magnArriba(s,N):
             magnUp += s[i,j]
     return magnUp/(N**2/2)
 
+# MAGNETIZACIÓN PROMEDIO DE LA MITAD INFERIOR DEL SISTEMA
 def magnAbajo(s,N):
     magnDown = 0
     for i in range(int((N-1)/2),N):
         for j in range(N):
             magnDown += s[i,j]
     return magnDown/(N**2/2)
-
-
-## CÁLCULO DE LA ENERGÍA DEL SISTEMA EN EL INSTANTE INICIAL
-#E = 0
-#for i in range(N):
-#    for j in range(N):
-#        left,right = condContornoH(j,N)
-#        E = E-0.5*(s[i,j]+(s[up,j]+s[down,j]+s[i,left]+s[i,right]))
 
 
 # ALGORITMO DE METROPOLIS - ISING KAWASAKI
@@ -121,10 +115,17 @@ def isingKawasaki(flip,s,i,j,u,v,N,T):
             p = pE   # 
         n = np.random.rand()  # Número aleatorio entre 0 y 1
 
-        # PERMUTACIÓN DE ESPINES s1,s2 = s2,s1
+        # Permutación de espines s1,s2 = s2,s1
         if n<p:  
             s[i,j], s[u,v] = s[u,v], s[i,j]    
 
+
+## CÁLCULO DE LA ENERGÍA DEL SISTEMA EN EL INSTANTE INICIAL
+#E = 0
+#for i in range(N):
+#    for j in range(N):
+#        left,right = condContornoH(j,N)
+#        E = E-0.5*(s[i,j]+(s[up,j]+s[down,j]+s[i,left]+s[i,right]))
 
 # ENERGÍA MEDIA POR PARTÍCULA EN EL INSTANTE t
 @jit(nopython=True)
