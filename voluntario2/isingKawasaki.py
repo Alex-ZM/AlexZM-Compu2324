@@ -11,11 +11,11 @@ from numba import njit
 ###################################################################################################################
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
-N = 32      # Dimensión de la cuadrícula
+N = 10      # Dimensión de la cuadrícula
 T = 1       # Temperatura T = [0,5]
-pmc = 5000  # Número de pasos Monte Carlo
+pmc = 50000  # Número de pasos Monte Carlo
 t = pmc*N**2
-skip = 40*pmc
+skip = 5000*N**2
 
 # SELECCIÓN DE LAS CONDICIONES INICIALES
 # Opciones: "magnNula", "magnAleatoria"
@@ -102,7 +102,7 @@ def magnAbajo(s,N):
 
 # ALGORITMO DE METROPOLIS - ISING KAWASAKI
 @njit
-def isingKawasaki(flip,s,i,j,u,v,N,T):
+def isingKawasaki(w,flip,s,i,j,u,v,N,T):
     if s[i,j] != s[u,v]:  
         up1,down1 = condContornoV(i,N)
         up2,down2 = condContornoV(u,N)
@@ -123,7 +123,11 @@ def isingKawasaki(flip,s,i,j,u,v,N,T):
 
         # Permutación de espines s1,s2 = s2,s1
         if n<p:  
-            s[i,j], s[u,v] = s[u,v], s[i,j]    
+            s[i,j], s[u,v] = s[u,v], s[i,j]
+
+        return w    
+    else:
+        return w-1
 
 
 # ENERGÍA MEDIA POR PARTÍCULA EN EL INSTANTE t
@@ -140,9 +144,9 @@ def energiaMediaPorParticula(s,N):
 ###################################################################################################################
 
 wd = os.path.dirname(__file__)  # Directorio de trabajo
-dirDatos = "datos\\ik_data_" + str(N) + "_" + str(pmc) + "_" + str(skip/pmc) + ".dat"          
-dirMag = "datos\\ik_magn_" + str(N) + "_" + str(pmc) + "_" + str(skip/pmc) + ".dat"       
-dirE = "datos\\ik_energiaPP_" + str(N) + "_" + str(pmc) + "_" + str(skip/pmc) + ".dat"  
+dirDatos = "ik_data_" + str(N) + "_" + str(pmc) + "_" + str(int(skip/pmc)) + ".dat"          
+dirMag = "ik_magn_" + str(N) + "_" + str(pmc) + "_" + str(int(skip/pmc)) + ".dat"       
+dirE = "ik_energiaPP_" + str(N) + "_" + str(pmc) + "_" + str(int(skip/pmc)) + ".dat"  
 fichero = open(os.path.join(wd,dirDatos), "w")  
 ficheroMagn = open(os.path.join(wd,dirMag), "w")  
 ficheroE = open(os.path.join(wd,dirE), "w")  
@@ -166,7 +170,7 @@ for w in range(t):
             v = j + 1   #
     
     # Una vez elegida la pareja, se decide si intercambiar los espines o no
-    isingKawasaki(flip,s,i,j,u,v,N,T)
+    w = isingKawasaki(w,flip,s,i,j,u,v,N,T)
 
     # Se guarda el estado de la red de espines y de otras magnitudes de interés
     if w%skip==0:
