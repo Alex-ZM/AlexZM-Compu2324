@@ -1,2 +1,3 @@
-test
 
+Los datos de la ejecución (número de iteraciones, valor de h, ...) se guardan normalmente al final de los ficheros de datos que se usan para los plots.
+Junto a esos datos se guardan a veces los resultados del cálculo de la temperatura, energía promedio, etc cuando son relevantes.

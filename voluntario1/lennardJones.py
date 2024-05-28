@@ -8,25 +8,24 @@ import matplotlib.pyplot as plt
 import random
 import time
 import os
-import sys
 from numba import jit
 
 ###################################################################################################################
 
 # Definimos algunas constantes
-h = 0.002    
-skip = 10
-nIteraciones = 70000     # 70000
-nParticulas = 16         # 20
-L = 4
+h = 0.002                # 0.002
+skip = 10                # 10
+nIteraciones = 40000     # 70000
+nParticulas = 20         
+L = 10
 lMedios = L/2
 margen = 0.05
 
 # Configuración de las condiciones iniciales (CAMBIAR)
-reposo = True
-soloDesplHoriz = False
-moduloVelocidad = 1
-redHexagonal24 = True
+reposo = False
+soloDesplHoriz = True
+moduloVelocidad = 4
+redHexagonal24 = False
 
 # Configuración para observar el comportamiento de la red hexagonal
 if redHexagonal24:
@@ -41,6 +40,8 @@ ePotencial = []
 eTotal = []
 normaV = np.zeros((int(nIteraciones/skip),nParticulas),dtype=np.float32)
 
+###################################################################################################################
+
 # CONDICIONES DE CONTORNO PERIÓDICO - DISTANCIA MÍNIMA ENTRE DOS PARTÍCULAS 
 def distanciaGlobal(vector,t,p,j,L,lMedios):
     distX = vector[t,p,0]-vector[t,j,0]
@@ -52,6 +53,7 @@ def distanciaGlobal(vector,t,p,j,L,lMedios):
     return np.array([distX,distY])
 
 
+# BUCLE DE VERLET - POTENCIAL LENNARD-JONES
 @jit(nopython=True,fastmath=True)
 def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloDesplHoriz,redHexagonal24):
 
@@ -65,7 +67,7 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloD
     evA = np.zeros((nParticulas,2))
     posiciones = np.zeros((int(nIteraciones/skip),nParticulas,2))
     velocidades = np.zeros((int(nIteraciones/skip),nParticulas,2))
-    fuerzaParedes = np.zeros((int(nIteraciones/skip)))
+    fuerzaParedes = np.zeros(nIteraciones)
     fuera = np.zeros((nParticulas,2))
 
     hMedios = h/2
@@ -125,10 +127,10 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloD
             for p in range(nParticulas):
                 v[p,0] = moduloVelocidad*random.random()
                 v[p,1] = 0
-        #else:
-        #    for p in range(nParticulas):
-        #        v[p,0] = 2*np.random.rand()-1
-        #        v[p,1] = np.random.choice(np.array([-1,1]))*np.sqrt(1-v[p,0]**2)
+        else:
+            for p in range(nParticulas):
+                v[p,0] = moduloVelocidad*(2*np.random.rand()-1)
+                v[p,1] = np.random.choice(np.array([-1,1]))*np.sqrt(moduloVelocidad**2-v[p,0]**2)
 
     # CONDICIONES INICIALES - POSICIONES ALEATORIAS
     for i in range(nParticulas):
@@ -179,7 +181,8 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloD
             for p in range(nParticulas):
                 posiciones[int(t/skip),p] = r[p]
                 velocidades[int(t/skip),p] = v[p]
-                fuerzaParedes[int(t/skip)] += (fuera[p,0]*v[p,0]+fuera[p,1]*v[p,1])/L
+        for p in range(nParticulas):
+            fuerzaParedes[int(t)] += (fuera[p,0]*v[p,0]+fuera[p,1]*v[p,1])/L
 
 
         # ALGORITMO DE VERLET + COMPROBACIÓN DE CONDICIONES DE CONTORNO
@@ -270,35 +273,56 @@ for t in range(int(nIteraciones/skip-1)):
         ficheroPlot.write(str(r[t,p,0]) + ", " + str(r[t,p,1]) + "\n")
     ficheroPlot.write("\n") 
 
-temperatura = 2*temperatura/int(nIteraciones/skip)
+temperatura = 0.5*temperatura/int(nIteraciones/skip)
 
+# CÁLCULO DEL PROMEDIO DE VELOCIDADES
 promedioVelocidades = np.zeros(int(nIteraciones/(2*skip)))
+promedioVelocidadesX = np.zeros(int(nIteraciones/(2*skip)))
+promedioVelocidadesY = np.zeros(int(nIteraciones/(2*skip)))
 for t in range(0,int(nIteraciones/(2*skip))-nParticulas,nParticulas):
     for p in range(nParticulas):
         promedioVelocidades[t+p] = np.linalg.norm(v[t+int(nIteraciones/(2*skip)),p])
+        promedioVelocidadesX[t+p] = np.linalg.norm(v[t+int(nIteraciones/(2*skip)),p,0])
+        promedioVelocidadesY[t+p] = np.linalg.norm(v[t+int(nIteraciones/(2*skip)),p,1])
 
-
-# CÁLCULO DE LA PRESIÓN                                      !!!!!!!!!!!!! REVISAR !!!!!!!!!!!!!!!!
-presion = np.zeros(int(nIteraciones*h/skip))                #!!!!!!!!!!!!! REVISAR !!!!!!!!!!!!!!!!
-for i in range(int(nIteraciones*h/skip)):                   #!!!!!!!!!!!!! REVISAR !!!!!!!!!!!!!!!!
+# CÁLCULO DE LA PRESIÓN                                      
+presionPromedio = 0                                    
+presion = np.zeros(int(nIteraciones*h))                
+for i in range(int(nIteraciones*h)):                   
     for t in range(i*int(1/h),int(1/h)*(i+1)):
         presion[i] += fuerzaParedes[t]
+    presionPromedio += presion[i]
+presionPromedio = presionPromedio/(nIteraciones*h)
 
 
 # REPRESENTACIÓN GRÁFICA DE LOS RESULTADOS
-ax1 = plt.subplot(2,2,1)
+plt.rcParams["figure.figsize"] = (10,8.5)
+
+ax1 = plt.subplot(3,2,1)
 plt.hist(normaV[0])
 plt.title("Velocidades iniciales",fontsize=11)
 plt.xlabel("|v|",fontsize=9)
 plt.ylabel("Frecuencia",fontsize=9)
 
-ax2 = plt.subplot(2,2,2)
+ax2 = plt.subplot(3,2,2)
 plt.hist(promedioVelocidades,bins=100)
 plt.title("Promedio de velocidades: t=t_f/2 a t=t_f",fontsize=11)
 plt.xlabel("|v|",fontsize=9)
 plt.ylabel("Frecuencia",fontsize=9)
 
-ax4 = plt.subplot(2,1,2)
+ax3 = plt.subplot(3,2,3)
+plt.hist(promedioVelocidadesX,bins=100)
+plt.title("Promedio de velocidades (eje X): t=t_f/2 a t=t_f",fontsize=11)
+plt.xlabel("|v_x|",fontsize=9)
+plt.ylabel("Frecuencia",fontsize=9)
+
+ax4 = plt.subplot(3,2,4)
+plt.hist(promedioVelocidadesY,bins=100)
+plt.title("Promedio de velocidades (eje Y): t=t_f/2 a t=t_f",fontsize=11)
+plt.xlabel("|v_y|",fontsize=9)
+plt.ylabel("Frecuencia",fontsize=9)
+
+ax5 = plt.subplot(3,1,3)
 plt.plot(eCinetica, label= "T")
 plt.plot(ePotencial, label="V")
 plt.plot(eTotal, label="E = T+V")
@@ -310,14 +334,17 @@ plt.legend()
 plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.2, hspace=0.5)
 plt.show()
 
-plt.plot(presion)
+plt.rcParams["figure.figsize"] = (5,3)
+plt.plot(presion, label="Presión")
 plt.title("Presión en función del tiempo")
 plt.xlabel("t")
 plt.ylabel("Presión")
+plt.axhline(y=presionPromedio, color='r', linestyle='-', label="Presión promedio: "+f"{(presionPromedio):.3f}")
+plt.legend()
 plt.show()
 
 # Por último, escribimos algunos datos de interés al final del fichero
-ficheroPlot.write("# Se han realizado "+str(nIteraciones)+" iteraciones con h = "+str(h)+", "+str(nParticulas)+" partículas y skip "+str(skip)+"\n")
+ficheroPlot.write("# Se han realizado "+str(nIteraciones)+" iteraciones con h = "+str(h)+", "+str(nParticulas)+" particulas y skip "+str(skip)+"\n")
 tEjecFin = time.time()
 ficheroPlot.write("# Tiempo de ejecucion: "+str(tEjecFin-tEjecIni)+"\n")
 ficheroPlot.write("# Temperatura: "+str(temperatura)+"\n")
