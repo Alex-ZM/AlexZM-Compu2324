@@ -15,15 +15,15 @@ from numba import jit
 # Definimos algunas constantes
 h = 0.002                # 0.002
 skip = 10                # 10
-nIteraciones = 40000     # 70000
-nParticulas = 20         
+nIteraciones = 100000     # 70000
+nParticulas = 16
 L = 10
 lMedios = L/2
 margen = 0.05
 
 # Configuración de las condiciones iniciales (CAMBIAR)
 reposo = False
-soloDesplHoriz = True
+soloDesplHoriz = False
 moduloVelocidad = 4
 redHexagonal24 = False
 
@@ -282,8 +282,8 @@ promedioVelocidadesY = np.zeros(int(nIteraciones/(2*skip)))
 for t in range(0,int(nIteraciones/(2*skip))-nParticulas,nParticulas):
     for p in range(nParticulas):
         promedioVelocidades[t+p] = np.linalg.norm(v[t+int(nIteraciones/(2*skip)),p])
-        promedioVelocidadesX[t+p] = np.linalg.norm(v[t+int(nIteraciones/(2*skip)),p,0])
-        promedioVelocidadesY[t+p] = np.linalg.norm(v[t+int(nIteraciones/(2*skip)),p,1])
+        promedioVelocidadesX[t+p] = v[t+int(nIteraciones/(2*skip)),p,0]
+        promedioVelocidadesY[t+p] = v[t+int(nIteraciones/(2*skip)),p,1]
 
 # CÁLCULO DE LA PRESIÓN                                      
 presionPromedio = 0                                    
@@ -334,7 +334,7 @@ plt.legend()
 plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.2, hspace=0.5)
 plt.show()
 
-plt.rcParams["figure.figsize"] = (5,3)
+plt.rcParams["figure.figsize"] = (5,4)
 plt.plot(presion, label="Presión")
 plt.title("Presión en función del tiempo")
 plt.xlabel("t")
@@ -348,5 +348,6 @@ ficheroPlot.write("# Se han realizado "+str(nIteraciones)+" iteraciones con h = 
 tEjecFin = time.time()
 ficheroPlot.write("# Tiempo de ejecucion: "+str(tEjecFin-tEjecIni)+"\n")
 ficheroPlot.write("# Temperatura: "+str(temperatura)+"\n")
+ficheroPlot.write("# Presion: "+f"{(presionPromedio):.3f}"+"\n")
 
 tFicherosFin = time.time()
