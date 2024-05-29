@@ -21,14 +21,17 @@ L = 4
 lMedios = L/2
 margen = 0.05
 
+#-------------------------------------------------------#
 # Configuración de las condiciones iniciales (CAMBIAR)
 reposo = True
 soloDesplHoriz = False
 moduloVelocidad = 1
 redHexagonal24 = False
+
 # Configuración para los apartados 6 y 7
 acelerarRapido = False  # Apartado 6
 acelerarLento = True    # Apartado 7
+#-------------------------------------------------------#
 
 # Configuración para observar el comportamiento de la red hexagonal
 if redHexagonal24:
