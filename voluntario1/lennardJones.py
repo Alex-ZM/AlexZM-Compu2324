@@ -5,14 +5,13 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import random
 import time
 import os
 from numba import jit
 
 ###################################################################################################################
 
-# Definimos algunas constantes
+# PARÁMETROS DEL SISTEMA (CAMBIAR)
 h = 0.002                # 0.002
 skip = 10                # 10
 nIteraciones = 100000     # 70000
@@ -22,7 +21,7 @@ lMedios = L/2
 margen = 0.05
 
 #-------------------------------------------------------#
-# Configuración de las condiciones iniciales (CAMBIAR)
+# CONFIGURACIÓN DE LAS CONDICIONES INICIALES (CAMBIAR)
 reposo = True
 soloDesplHoriz = False
 moduloVelocidad = 1
@@ -127,7 +126,7 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloD
     if reposo == False:
         if soloDesplHoriz == True:
             for p in range(nParticulas):
-                v[p,0] = moduloVelocidad*random.random()
+                v[p,0] = moduloVelocidad*np.random.rand()
                 v[p,1] = 0
         else:
             for p in range(nParticulas):
@@ -136,8 +135,8 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloD
 
     # CONDICIONES INICIALES - POSICIONES ALEATORIAS
     for i in range(nParticulas):
-        r[i,0] += (2*random.random()-1)*margen  # Desplaza aleatoriamente en la componente X (+-margen)
-        r[i,1] += (2*random.random()-1)*margen  # Desplaza aleatoriamente en la componente Y (+-margen)
+        r[i,0] += (2*np.random.rand()-1)*margen  # Desplaza aleatoriamente en la componente X (+-margen)
+        r[i,1] += (2*np.random.rand()-1)*margen  # Desplaza aleatoriamente en la componente Y (+-margen)
 
 
     # CONDICIONES DE CONTORNO PERIÓDICO - RECOLOCACIÓN DE PARTÍCULAS 
@@ -252,11 +251,9 @@ tEjecFin = time.time()
 
 # ESCRITURA DE DATOS EN EL FICHERO
 temperaturaProm = 0
-tFicherosIni = time.time()
 for t in range(int(nIteraciones/skip-1)):
 
     # CÁLCULO ENERGÍAS
-    sumaVelocidades = 0
     sumaT = 0
     sumaV = 0
     for p in range(nParticulas):  
@@ -276,25 +273,26 @@ for t in range(int(nIteraciones/skip-1)):
         temperaturaProm += v[t,p,0]**2 + v[t,p,1]**2
     
 
-    # ESCRITURA EN FICHERO
     eCinetica.append(sumaT)
     ePotencial.append(sumaV)
     eTotal.append(sumaT+sumaV)
+
+    # ESCRITURA EN FICHERO
     for p in range(nParticulas):
         ficheroPlot.write(str(r[t,p,0]) + ", " + str(r[t,p,1]) + "\n")
     ficheroPlot.write("\n") 
 
 temperaturaProm = 0.5*temperaturaProm/(nIteraciones/skip)
 
-# CÁLCULO DEL PROMEDIO DE VELOCIDADES
-promedioVelocidades = np.zeros(int(nIteraciones/(2*skip)))
-promedioVelocidadesX = np.zeros(int(nIteraciones/(2*skip)))
-promedioVelocidadesY = np.zeros(int(nIteraciones/(2*skip)))
+# VECTORES PARA REPRESENTACIÓN DE VELOCIDADES
+histogrVelocidades = np.zeros(int(nIteraciones/(2*skip)))
+histogrVelocidadesX = np.zeros(int(nIteraciones/(2*skip)))
+histogrVelocidadesY = np.zeros(int(nIteraciones/(2*skip)))
 for t in range(0,int(nIteraciones/(2*skip))-nParticulas,nParticulas):
     for p in range(nParticulas):
-        promedioVelocidades[t+p] = np.linalg.norm(v[t+int(nIteraciones/(2*skip)),p])
-        promedioVelocidadesX[t+p] = v[t+int(nIteraciones/(2*skip)),p,0]
-        promedioVelocidadesY[t+p] = v[t+int(nIteraciones/(2*skip)),p,1]
+        histogrVelocidades[t+p] = np.linalg.norm(v[t+int(nIteraciones/(2*skip)),p])
+        histogrVelocidadesX[t+p] = v[t+int(nIteraciones/(2*skip)),p,0]
+        histogrVelocidadesY[t+p] = v[t+int(nIteraciones/(2*skip)),p,1]
 
 # CÁLCULO DE LA PRESIÓN                                      
 presionPromedio = 0                                    
@@ -343,20 +341,20 @@ plt.xlabel("|v|",fontsize=9)
 plt.ylabel("Frecuencia",fontsize=9)
 
 ax2 = plt.subplot(3,2,2)
-plt.hist(promedioVelocidades,bins=100)
-plt.title("Promedio de velocidades: t=t_f/2 a t=t_f",fontsize=11)
+plt.hist(histogrVelocidades,bins=100)
+plt.title("Velocidades: t=t_f/2 a t=t_f",fontsize=11)
 plt.xlabel("|v|",fontsize=9)
 plt.ylabel("Frecuencia",fontsize=9)
 
 ax3 = plt.subplot(3,2,3)
-plt.hist(promedioVelocidadesX,bins=100)
-plt.title("Promedio de velocidades (eje X): t=t_f/2 a t=t_f",fontsize=11)
+plt.hist(histogrVelocidadesX,bins=100)
+plt.title("Velocidades (eje X): t=t_f/2 a t=t_f",fontsize=11)
 plt.xlabel("|v_x|",fontsize=9)
 plt.ylabel("Frecuencia",fontsize=9)
 
 ax4 = plt.subplot(3,2,4)
-plt.hist(promedioVelocidadesY,bins=100)
-plt.title("Promedio de velocidades (eje Y): t=t_f/2 a t=t_f",fontsize=11)
+plt.hist(histogrVelocidadesY,bins=100)
+plt.title("Velocidades (eje Y): t=t_f/2 a t=t_f",fontsize=11)
 plt.xlabel("|v_y|",fontsize=9)
 plt.ylabel("Frecuencia",fontsize=9)
 
@@ -400,7 +398,7 @@ plt.ylabel("Temperatura")
 plt.legend()
 
 ax8 = plt.subplot(3,1,3)
-plt.plot(temperatura, label="Desv. Cuad. Media")
+plt.plot(desvCuad, label="Desv. Cuad. Media")
 plt.title("Desv. cuad. media en función del tiempo")
 plt.xlabel("t")
 plt.ylabel("Desviación cuadrática media")
@@ -415,5 +413,3 @@ tEjecFin = time.time()
 ficheroPlot.write("# Tiempo de ejecucion: "+str(tEjecFin-tEjecIni)+"\n")
 ficheroPlot.write("# Temperatura: "+str(temperaturaProm)+"\n")
 ficheroPlot.write("# Presion: "+f"{(presionPromedio):.3f}"+"\n")
-
-tFicherosFin = time.time()

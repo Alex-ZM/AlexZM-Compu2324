@@ -1,7 +1,7 @@
 
-    #####################################################################################
-    ### SIMULACIÓN CON DINÁMICA MOLECULAR DE UN GAS CON UN POTENCIAL DE LENNARD-JONES ###
-    #####################################################################################
+    ##################################################################
+    ### AJUSTE LINEAL - ECUACIÓN DE ESTADO DE GAS DE LENNARD-JONES ###
+    ##################################################################
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,11 +23,13 @@ texto_leyenda = f"P = {pendiente:.4f}*T"
 
 valores_y_ajuste = pendiente * temperaturas + intercepto
 
+print('Chi Cuadrado: ' + str(r_value))
+
 plt.plot(temperaturas, valores_y_ajuste, color='red', label=f'Ajuste lineal\n{texto_leyenda}')
 plt.scatter(temperaturas, presiones)
 plt.xlabel('Temperatura')
 plt.ylabel('Presión')
-plt.title('Presión en función de la temperatura (20 partículas en red 10x10)')
+plt.title('Presión en función de la temperatura (16 partículas en red 10x10)')
 plt.grid(True)
 plt.legend()
 plt.show()
