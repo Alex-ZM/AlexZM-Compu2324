@@ -7,19 +7,20 @@ import numpy as np
 import os
 import time
 from numba import njit
+import matplotlib.pyplot as plt
 
 ###################################################################################################################
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
 N = 10      # Dimensión de la cuadrícula
 T = 1       # Temperatura T = [0,5]
-pmc = 50000  # Número de pasos Monte Carlo
+pmc = 40000  # Número de pasos Monte Carlo
 t = pmc*N**2
-skip = 5000*N**2
+skip = 10*N**2
 
 # SELECCIÓN DE LAS CONDICIONES INICIALES
 # Opciones: "magnNula", "magnAleatoria"
-condIni = "magnNula"  
+condIni = "magnAleatoria"  
 
 ###################################################################################################################
 
@@ -48,11 +49,11 @@ elif condIni == "magnNula":
 @njit
 def condContornoV(i,N):
     if i==N-1:      #
-        up = i-1    #
-        down = i    #
+        up = N-2    #
+        down = N-1  #
     elif i==0:      # 
-        up = i      # Condiciones de contorno verticales
-        down = i+1  # 
+        up = 0      # Condiciones de contorno verticales
+        down = 1    # 
     else:           # 
         up = i-1    # 
         down = i+1  # 
@@ -72,6 +73,16 @@ def condContornoH(j,N):
         right = j+1  # 
     return left,right
 
+@njit
+def v_pE(T,s,i,j,u,v,left1,left2,right1,right2,up1,down2):
+    deltaE = 2*s[i,j]*(s[i,right1]+s[i,left1]+s[up1,j]-s[u,right2]-s[u,left2]-s[down2,v]) # Pareja vertical
+    return np.exp(-deltaE/T)
+
+@njit
+def h_pE(T,s,i,j,u,v,left1,right2,up1,up2,down1,down2):
+    deltaE = 2*s[i,j]*(s[up1,j]+s[down1,j]+s[i,left1]-s[up2,v]-s[down2,v]-s[u,right2]) # Pareja horizontal
+    return np.exp(-deltaE/T)
+
 
 # MAGNETIZACIÓN DEL SISTEMA
 @njit
@@ -80,6 +91,7 @@ def magnSistema(s,N):
     for i in range(N):
         for j in range(N):
             magn += s[i,j]
+    return magn
 
 # MAGNETIZACIÓN PROMEDIO DE LA MITAD SUPERIOR DEL SISTEMA
 @njit
@@ -100,6 +112,18 @@ def magnAbajo(s,N):
     return magnDown/(N**2/2)
 
 
+# CÁLCULO DEL CALOR ESPECÍFICO
+@njit
+def calcCalorEspecifico(N,T,E):
+    promECuad = 0
+    promE = 0
+    for t in range(len(E)):
+        promECuad += E[t]**2
+        promE += E[t]
+    promECuad = promECuad/len(E)
+    promE = promE/len(E)
+    return (promECuad-promE**2)/(N*T)**2
+
 # ALGORITMO DE METROPOLIS - ISING KAWASAKI
 @njit
 def isingKawasaki(w,flip,s,i,j,u,v,N,T):
@@ -110,24 +134,23 @@ def isingKawasaki(w,flip,s,i,j,u,v,N,T):
         left2,right2 = condContornoH(v,N)
 
         if flip == -1:
-            deltaE = 2*s[i,j]*(s[i,right1]+s[i,left1]+s[up1,j]-s[u,right2]-s[u,left2]-s[down2,v]) # Pareja vertical
+            pE = v_pE(T,s,i,j,u,v,left1,left2,right1,right2,up1,down2)  # Caso pareja vertical
         else:
-            deltaE = 2*s[i,j]*(s[up1,j]+s[down1,j]+s[i,left1]-s[up2,v]-s[down2,v]-s[u,right2]) # Pareja horizontal
+            pE = h_pE(T,s,i,j,u,v,left1,right2,up1,up2,down1,down2)  # Caso pareja horizontal
 
-        pE = np.exp(-deltaE/T)
-        if 1<pE:     # 
+        if pE>1:     # 
             p = 1    # Evaluación de p
         else:        # 
             p = pE   # 
-        n = np.random.rand()  # Número aleatorio entre 0 y 1
 
         # Permutación de espines s1,s2 = s2,s1
+        n = np.random.rand()  # Número aleatorio entre 0 y 1
         if n<p:  
             s[i,j], s[u,v] = s[u,v], s[i,j]
 
-        return w    
+        return w  # Los dos espines eran diferentes -> Avanzar w
     else:
-        return w-1
+        return w-1  # Los dos espines eran iguales -> Mantener w
 
 
 # ENERGÍA MEDIA POR PARTÍCULA EN EL INSTANTE t
@@ -144,19 +167,21 @@ def energiaMediaPorParticula(s,N):
 ###################################################################################################################
 
 wd = os.path.dirname(__file__)  # Directorio de trabajo
-dirDatos = "ik_data_" + str(N) + "_" + str(pmc) + "_" + str(int(skip/pmc)) + ".dat"          
-dirMag = "ik_magn_" + str(N) + "_" + str(pmc) + "_" + str(int(skip/pmc)) + ".dat"       
-dirE = "ik_energiaPP_" + str(N) + "_" + str(pmc) + "_" + str(int(skip/pmc)) + ".dat"  
-fichero = open(os.path.join(wd,dirDatos), "w")  
-ficheroMagn = open(os.path.join(wd,dirMag), "w")  
-ficheroE = open(os.path.join(wd,dirE), "w")  
+dirDatos = "ik_data_" + str(N) + "_" + str(pmc) + "_" + str(int(skip/N**2)) + ".dat"
+dirInfo = "ik_info_" + str(N) + "_" + str(pmc) + "_" + str(int(skip/N**2)) + ".dat"
+fichero = open(os.path.join(wd,dirDatos), "w")
+ficheroInfo = open(os.path.join(wd,dirInfo), "w")
+
+vMagnArriba = []
+vMagnAbajo = []
+vEnergiaMPP = []
 
 # BUCLE PRINCIPAL
 ini = time.time()
 for w in range(t):
 
     # Se elijen dos partículas aleatorias vecinas [ p1=(i,j) ; p2=(u,v) ]
-    i = np.random.randint(0,N-2)
+    i = np.random.randint(1,N-1)
     j = np.random.randint(0,N-1)   
     flip = np.random.choice([-1,1])
     if flip == -1:  # 
@@ -178,17 +203,45 @@ for w in range(t):
         for i in range(N):
             fichero.write(' '.join(map(str, s[i])) + "\n")
 
-        for i in range(N):
-            ficheroMagn.write(str(magnArriba(s,N)) + "," + str(magnAbajo(s,N)) + "\n")
+        vMagnArriba.append(magnArriba(s,N))
+        vMagnAbajo.append(magnAbajo(s,N))
+        vEnergiaMPP.append(energiaMediaPorParticula(s,N))
 
-        ficheroE.write(str(energiaMediaPorParticula(s,N)) + "\n")
 fin = time.time()
+
+calorEspecif = calcCalorEspecifico(N,T,vEnergiaMPP)
+magnetizacionSistema = magnSistema(s,N)
+
+# REPRESENTACIÓN GRÁFICA DE LA ENERGÍA MEDIA POR PARTÍCULA 
+plt.rcParams["figure.figsize"] = (7,8)
+
+ax6 = plt.subplot(2,1,1)
+plt.plot(vMagnAbajo, label="Magn. mitad inf.")
+plt.plot(vMagnArriba, label="Magn. mitad sup.")
+plt.axhline(y=0, color='black', linewidth=1)
+plt.title("Magnetización por mitades en función de t (M_T=" + f"{magnetizacionSistema:.0f}"+")")
+plt.xlabel("t")
+plt.ylabel("Magnetización")
+plt.legend()
+
+ax8 = plt.subplot(2,1,2)
+plt.plot(vEnergiaMPP)
+plt.title("Energía promedio por partícula")
+plt.xlabel("t")
+plt.ylabel("E/partícula")
+plt.legend()
+plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.2, hspace=0.5)
+plt.show()
 
 ###################################################################################################################
 
 # INFORMACIÓN SOBRE LA EJECUCIÓN DEL PROGRAMA
 print("\n|| Red "+str(N)+"x"+str(N)+"\n|| T = "+str(T)+"\n|| "+str(t)+" iteraciones ("+f"{(t/N**2):.0f}"+" pmc)")
-print("----> Tiempo de ejecución: "+f"{(fin-ini):.2f}"+" s\n")
-#fichero.write("\n# || Red "+str(N)+"x"+str(N)+"\n# || T = "+str(T)+"\n# || "+str(t)+" iteraciones ("+f"{(pmc):.0f}"+" pmc)")
-#fichero.write("\n# ----> Tiempo de ejecucion: "+f"{(fin-ini):.2f}"+" s\n")
+print("|| Skip: "+ str(skip/N**2) + " pmc\n|| Calor especifico: " + f"{(calorEspecif):.7f}")
+print("|| Magnetizacion del sistema: " + str(magnetizacionSistema))
+print("----> Tiempo de ejecucion: "+f"{(fin-ini):.2f}"+" s\n")
+ficheroInfo.write("\n|| Red "+str(N)+"x"+str(N)+"\n|| T = "+str(T)+"\n|| "+str(t)+" iteraciones ("+f"{(t/N**2):.0f}"+" pmc)")
+ficheroInfo.write("\n|| Skip: "+ str(skip/N**2) + " pmc\n|| Calor especifico: " + f"{(calorEspecif):.7f}")
+ficheroInfo.write("\n|| Magnetizacion del sistema: " + str(magnetizacionSistema))
+ficheroInfo.write("\n----> Tiempo de ejecucion: "+f"{(fin-ini):.2f}"+" s\n")
 fichero.close()
