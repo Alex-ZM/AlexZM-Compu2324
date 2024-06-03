@@ -51,7 +51,7 @@ def condContornoV(i,N):
     if i==N-1:      #
         up = N-2    #
         down = N-1  #
-    elif i==0:      # 
+    elif i==0:      #
         up = 0      # Condiciones de contorno verticales
         down = 1    # 
     else:           # 
@@ -73,11 +73,14 @@ def condContornoH(j,N):
         right = j+1  # 
     return left,right
 
+
+# CÁLCULO DE p - CASO DE PAREJA VERTICAL
 @njit
 def v_pE(T,s,i,j,u,v,left1,left2,right1,right2,up1,down2):
     deltaE = 2*s[i,j]*(s[i,right1]+s[i,left1]+s[up1,j]-s[u,right2]-s[u,left2]-s[down2,v]) # Pareja vertical
     return np.exp(-deltaE/T)
 
+# CÁLCULO DE p - CASO DE PAREJA HORIZONTAL
 @njit
 def h_pE(T,s,i,j,u,v,left1,right2,up1,up2,down1,down2):
     deltaE = 2*s[i,j]*(s[up1,j]+s[down1,j]+s[i,left1]-s[up2,v]-s[down2,v]-s[u,right2]) # Pareja horizontal
@@ -181,8 +184,8 @@ ini = time.time()
 for w in range(t):
 
     # Se elijen dos partículas aleatorias vecinas [ p1=(i,j) ; p2=(u,v) ]
-    i = np.random.randint(1,N-1)
-    j = np.random.randint(0,N-1)   
+    i = np.random.randint(1,N-2)
+    j = np.random.randint(0,N)   
     flip = np.random.choice([-1,1])
     if flip == -1:  # 
         u = i + 1   # Vecinas verticales
@@ -239,7 +242,7 @@ plt.show()
 print("\n|| Red "+str(N)+"x"+str(N)+"\n|| T = "+str(T)+"\n|| "+str(t)+" iteraciones ("+f"{(t/N**2):.0f}"+" pmc)")
 print("|| Skip: "+ str(skip/N**2) + " pmc\n|| Calor especifico: " + f"{(calorEspecif):.7f}")
 print("|| Magnetizacion del sistema: " + str(magnetizacionSistema))
-print("----> Tiempo de ejecucion: "+f"{(fin-ini):.2f}"+" s\n")
+print("----> Tiempo de ejecucion: "+f"{(fin-ini):.2f}"+" s")
 ficheroInfo.write("\n|| Red "+str(N)+"x"+str(N)+"\n|| T = "+str(T)+"\n|| "+str(t)+" iteraciones ("+f"{(t/N**2):.0f}"+" pmc)")
 ficheroInfo.write("\n|| Skip: "+ str(skip/N**2) + " pmc\n|| Calor especifico: " + f"{(calorEspecif):.7f}")
 ficheroInfo.write("\n|| Magnetizacion del sistema: " + str(magnetizacionSistema))

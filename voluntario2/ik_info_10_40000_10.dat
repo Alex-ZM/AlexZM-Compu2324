@@ -3,6 +3,6 @@
 || T = 1
 || 4000000 iteraciones (40000 pmc)
 || Skip: 10.0 pmc
-|| Calor especifico: 0.000118
-|| Magnetizacion del sistema: -26
-----> Tiempo de ejecucion: 98.78 s
+|| Calor especifico: 0.0001938
+|| Magnetizacion del sistema: -4
+----> Tiempo de ejecucion: 102.32 s
