@@ -6,21 +6,21 @@
 import numpy as np
 import os
 import time
-from numba import njit
+from numba import jit
 import matplotlib.pyplot as plt
 
 ###################################################################################################################
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
-N = 10      # Dimensión de la cuadrícula
+N = 16      # Dimensión de la cuadrícula
 T = 1       # Temperatura T = [0,5]
 pmc = 40000  # Número de pasos Monte Carlo
 t = pmc*N**2
-skip = 10*N**2
+skip = 70*N**2
 
 # SELECCIÓN DE LAS CONDICIONES INICIALES
 # Opciones: "magnNula", "magnAleatoria"
-condIni = "magnAleatoria"  
+condIni = "magnAleatoria"
 
 ###################################################################################################################
 
@@ -45,22 +45,8 @@ elif condIni == "magnNula":
 
 ###################################################################################################################
 
-# CONDICIONES DE CONTORNO - BORDES VERTICALES CON ESPÍN FIJO
-@njit
-def condContornoV(i,N):
-    if i==N-1:      #
-        up = N-2    #
-        down = N-1  #
-    elif i==0:      #
-        up = 0      # Condiciones de contorno verticales
-        down = 1    # 
-    else:           # 
-        up = i-1    # 
-        down = i+1  # 
-    return up,down
-
 # CONDICIONES DE CONTORNO - PERIODICIDAD HORIZONTAL (CILINDRO)
-@njit
+@jit(nopython=True,fastmath=True)
 def condContornoH(j,N):
     if j==N-1:       # 
         left = j-1   # 
@@ -75,20 +61,20 @@ def condContornoH(j,N):
 
 
 # CÁLCULO DE p - CASO DE PAREJA VERTICAL
-@njit
+@jit(nopython=True,fastmath=True)
 def v_pE(T,s,i,j,u,v,left1,left2,right1,right2,up1,down2):
     deltaE = 2*s[i,j]*(s[i,right1]+s[i,left1]+s[up1,j]-s[u,right2]-s[u,left2]-s[down2,v]) # Pareja vertical
     return np.exp(-deltaE/T)
 
 # CÁLCULO DE p - CASO DE PAREJA HORIZONTAL
-@njit
+@jit(nopython=True,fastmath=True)
 def h_pE(T,s,i,j,u,v,left1,right2,up1,up2,down1,down2):
     deltaE = 2*s[i,j]*(s[up1,j]+s[down1,j]+s[i,left1]-s[up2,v]-s[down2,v]-s[u,right2]) # Pareja horizontal
     return np.exp(-deltaE/T)
 
 
 # MAGNETIZACIÓN DEL SISTEMA
-@njit
+@jit(nopython=True,fastmath=True)
 def magnSistema(s,N):
     magn = 0
     for i in range(N):
@@ -97,7 +83,7 @@ def magnSistema(s,N):
     return magn
 
 # MAGNETIZACIÓN PROMEDIO DE LA MITAD SUPERIOR DEL SISTEMA
-@njit
+@jit(nopython=True,fastmath=True)
 def magnArriba(s,N):
     magnUp = 0
     for i in range(int((N-1)/2)):
@@ -106,7 +92,7 @@ def magnArriba(s,N):
     return magnUp/(N**2/2)
 
 # MAGNETIZACIÓN PROMEDIO DE LA MITAD INFERIOR DEL SISTEMA
-@njit
+@jit(nopython=True,fastmath=True)
 def magnAbajo(s,N):
     magnDown = 0
     for i in range(int((N-1)/2),N):
@@ -116,7 +102,7 @@ def magnAbajo(s,N):
 
 
 # CÁLCULO DEL CALOR ESPECÍFICO
-@njit
+@jit(nopython=True,fastmath=True)
 def calcCalorEspecifico(N,T,E):
     promECuad = 0
     promE = 0
@@ -125,14 +111,14 @@ def calcCalorEspecifico(N,T,E):
         promE += E[t]
     promECuad = promECuad/len(E)
     promE = promE/len(E)
-    return (promECuad-promE**2)/(N*T)**2
+    return (promECuad-promE**2)/(T)**2
 
 # ALGORITMO DE METROPOLIS - ISING KAWASAKI
-@njit
+@jit(nopython=True,fastmath=True)
 def isingKawasaki(w,flip,s,i,j,u,v,N,T):
     if s[i,j] != s[u,v]:  
-        up1,down1 = condContornoV(i,N)
-        up2,down2 = condContornoV(u,N)
+        up1,down1 = i-1,i+1
+        up2,down2 = u-1,u+1
         left1,right1 = condContornoH(j,N)
         left2,right2 = condContornoH(v,N)
 
@@ -157,12 +143,12 @@ def isingKawasaki(w,flip,s,i,j,u,v,N,T):
 
 
 # ENERGÍA MEDIA POR PARTÍCULA EN EL INSTANTE t
-@njit
+@jit(nopython=True,fastmath=True)
 def energiaMediaPorParticula(s,N):
     E = 0
     for i in range(N):
         for j in range(N):
-            up,down = condContornoV(i,N)
+            up,down = i-1,i+1
             left,right = condContornoH(j,N)
             E += s[i,j]*(s[up,j]+s[down,j]+s[i,left]+s[i,right])
     return -0.5*E/N**2
@@ -215,6 +201,14 @@ fin = time.time()
 calorEspecif = calcCalorEspecifico(N,T,vEnergiaMPP)
 magnetizacionSistema = magnSistema(s,N)
 
+magnPromedioArriba = 0
+magnPromedioAbajo = 0
+for t in range(len(vMagnArriba)):
+    magnPromedioArriba += vMagnArriba[t]
+    magnPromedioAbajo += vMagnAbajo[t]
+magnPromedioArriba = magnPromedioArriba/len(vMagnArriba)
+magnPromedioAbajo = magnPromedioAbajo/len(vMagnAbajo)
+
 # REPRESENTACIÓN GRÁFICA DE LA ENERGÍA MEDIA POR PARTÍCULA 
 plt.rcParams["figure.figsize"] = (7,8)
 
@@ -222,6 +216,8 @@ ax6 = plt.subplot(2,1,1)
 plt.plot(vMagnAbajo, label="Magn. mitad inf.")
 plt.plot(vMagnArriba, label="Magn. mitad sup.")
 plt.axhline(y=0, color='black', linewidth=1)
+plt.axhline(y=magnPromedioAbajo, color='r', linestyle='-', label="<M_inf>: "+f"{(magnPromedioAbajo):.3f}")
+plt.axhline(y=magnPromedioArriba, color='r', linestyle='-', label="<M_sup>: "+f"{(magnPromedioArriba):.3f}")
 plt.title("Magnetización por mitades en función de t (M_T=" + f"{magnetizacionSistema:.0f}"+")")
 plt.xlabel("t")
 plt.ylabel("Magnetización")
@@ -241,10 +237,14 @@ plt.show()
 # INFORMACIÓN SOBRE LA EJECUCIÓN DEL PROGRAMA
 print("\n|| Red "+str(N)+"x"+str(N)+"\n|| T = "+str(T)+"\n|| "+str(t)+" iteraciones ("+f"{(t/N**2):.0f}"+" pmc)")
 print("|| Skip: "+ str(skip/N**2) + " pmc\n|| Calor especifico: " + f"{(calorEspecif):.7f}")
+print("|| Magnetización promedio de la mitad superior: " + str(magnPromedioArriba))
+print("|| Magnetización promedio de la mitad inferior: " + str(magnPromedioAbajo))
 print("|| Magnetizacion del sistema: " + str(magnetizacionSistema))
 print("----> Tiempo de ejecucion: "+f"{(fin-ini):.2f}"+" s")
 ficheroInfo.write("\n|| Red "+str(N)+"x"+str(N)+"\n|| T = "+str(T)+"\n|| "+str(t)+" iteraciones ("+f"{(t/N**2):.0f}"+" pmc)")
 ficheroInfo.write("\n|| Skip: "+ str(skip/N**2) + " pmc\n|| Calor especifico: " + f"{(calorEspecif):.7f}")
+ficheroInfo.write("\n|| Magnetizacion promedio de la mitad superior: " + str(magnPromedioArriba))
+ficheroInfo.write("\n|| Magnetizacion promedio de la mitad inferior: " + str(magnPromedioAbajo))
 ficheroInfo.write("\n|| Magnetizacion del sistema: " + str(magnetizacionSistema))
 ficheroInfo.write("\n----> Tiempo de ejecucion: "+f"{(fin-ini):.2f}"+" s\n")
 fichero.close()
