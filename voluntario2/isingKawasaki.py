@@ -12,25 +12,27 @@ import matplotlib.pyplot as plt
 ###################################################################################################################
 
 # DEFINICIÓN DE CONSTANTES Y PARÁMETROS
-N = 32      # Dimensión de la cuadrícula
-T = 1.2       # Temperatura T = [0,5]
-pmc = 800000  # Número de pasos Monte Carlo
+N = 16      # Dimensión de la cuadrícula
+T = 2.23       # Temperatura T = [0,5]
+pmc = 200000  # Número de pasos Monte Carlo
 t = pmc*N**2
-skip = 900*N**2
+skip = 200*N**2
 
 # SELECCIÓN DE LAS CONDICIONES INICIALES
 # Opciones: "magnNula", "magnAleatoria", "magnX"
-condIni = "magnX"
-X = 200  # Valor de M en caso de "magnX"
+condIni = "magnNula"
+X = 8  # Valor de M en caso de "magnX"
 
 ###################################################################################################################
 
 # CREACIÓN DE LA MATRIZ DE ESPINES s
+# Magnetización aleatoria
 if condIni == "magnAleatoria":
     s = np.random.choice([-1,+1], size=(N,N)).astype(np.int8)
     for j in range(N):
         s[0,j] = -1
         s[N-1,j] = 1
+# Magnetización nula
 elif condIni == "magnNula":
     s = np.ones((N,N)).astype(np.int8)
     for _ in range(int(N**2/2)-N):
@@ -43,6 +45,7 @@ elif condIni == "magnNula":
     for j in range(N):
         s[0,j] = -1
         s[N-1,j] = 1
+# Magnetización no nula M=X
 elif condIni == "magnX":
     s = np.ones((N,N)).astype(np.int8)
     for _ in range(int(N**2/2)-N):

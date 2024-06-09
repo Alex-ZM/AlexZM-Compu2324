@@ -1,0 +1,12 @@
+
+|| Red 32x32
+|| T = 2.22
+|| 512000000 iteraciones (500000 pmc)
+|| Skip: 200.0 pmc
+|| Calor especifico: 0.0016550
+|| Magnetizacion promedio de la mitad superior: -0.397
+|| Magnetizacion promedio de la mitad inferior: 0.788
+|| Magnetizacion del sistema: 200
+|| Susceptibilidad magnetica de la mitad superior: 0.018197
+|| Susceptibilidad magnetica de la mitad inferior: 0.018197
+----> Tiempo de ejecucion: 403.33 s
