@@ -1,0 +1,10 @@
+
+|| Red 8x8
+|| T = 1
+|| 1001 iteraciones (16 pmc)
+|| Skip: 40.0 pmc
+|| Calor especifico: 0.0105569
+|| Magnetizacion promedio de la mitad superior: -0.746
+|| Magnetizacion promedio de la mitad inferior: 0.996
+|| Magnetizacion del sistema: 8
+----> Tiempo de ejecucion: 3.80 s

@@ -1,0 +1,10 @@
+
+|| Red 16x16
+|| T = 3
+|| 40960000 iteraciones (160000 pmc)
+|| Skip: 160.0 pmc
+|| Calor especifico: 0.0017188
+|| Magnetizacion promedio de la mitad superior: -0.276
+|| Magnetizacion promedio de la mitad inferior: 0.338
+|| Magnetizacion del sistema: 8
+----> Tiempo de ejecucion: 32.54 s

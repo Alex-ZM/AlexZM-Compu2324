@@ -1,0 +1,12 @@
+
+|| Red 48x48
+|| T = 2.26
+|| 460800000 iteraciones (200000 pmc)
+|| Skip: 200.0 pmc
+|| Calor especifico: 0.0012593
+|| Magnetizacion promedio de la mitad superior: -0.118
+|| Magnetizacion promedio de la mitad inferior: 0.124
+|| Magnetizacion del sistema: 8
+|| Susceptibilidad magnetica de la mitad superior: 0.001407
+|| Susceptibilidad magnetica de la mitad inferior: 0.001407
+----> Tiempo de ejecucion: 323.37 s

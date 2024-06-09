@@ -49,12 +49,12 @@ import os
 # Parámetros
 # ========================================
 wd = os.path.dirname(__file__)      # Directorio de trabajo
-rd = "ik_data_10_40000_70.dat"               # Directorio relativo
+rd = "2nulaik_data_T1_32.dat"               # Directorio relativo
 file_in = os.path.join(wd,rd) # Nombre del fichero de datos
 file_out = "ising" # Nombre del fichero de salida (sin extensión)
 
 interval = 1 # Tiempo entre fotogramas en milisegundos
-save_to_file = True # False: muestra la animación por pantalla,
+save_to_file = False # False: muestra la animación por pantalla,
                      # True: la guarda en un fichero
 dpi = 150 # Calidad del vídeo de salida (dots per inch)
 
