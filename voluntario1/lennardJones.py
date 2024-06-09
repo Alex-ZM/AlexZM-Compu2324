@@ -14,7 +14,7 @@ from numba import jit
 # PARÁMETROS DEL SISTEMA (CAMBIAR)
 h = 0.002                # 0.002
 skip = 10                # 10
-nIteraciones = 100000     # 70000
+nIteraciones = 200000     # 70000
 nParticulas = 16
 L = 4
 lMedios = L/2
@@ -240,7 +240,7 @@ def verlet(h,nIteraciones,nParticulas,skip,L,margen,reposo,moduloVelocidad,soloD
 ###################################################################################################################
 
 wd = os.path.dirname(__file__)  # Directorio de trabajo
-datosPath = os.path.join(wd,"posParticulas.dat")
+datosPath = os.path.join(wd,"200posParticulas.dat")
 ficheroPlot = open(datosPath, "w")
 
 # CÁLCULO DE POSICIONES, VELOCIDADES Y PERÍODOS MEDIANTE LA FUNCIÓN "verlet()"
